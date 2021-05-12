@@ -4,6 +4,7 @@
 #include <locale.h> // Localização, caracteres
 #include <string.h> // Trabalhar com strings
 #define EXIT_SUCCESS 0
+#define EXIT_ERROR -1
 #define databaseFile "database.data"
 
 // Define estrutura para endereços tipo _ADDRESS
@@ -12,36 +13,50 @@ typedef struct endereco{
     char city[20];
     char bairro[20];
     char street[40];
-    int number;
+    unsigned short int number;
     unsigned int zipcode;
 }_ADDRESS;
 
 // Define estrutura para pressoas do tipo _PERSON
 typedef struct pessoa{
-    unsigned int id;
+    unsigned short int id;
     char name[40];
-    int cpf_cnpj;
-    int phoneNumber;
+    long int cpf_cnpj;
+    unsigned int phoneNumber;
     _ADDRESS address;
 }_PERSON;
 
 // Função para adicionar nova pessoa no banco de dados
 int addNewClient(_PERSON pessoa){
-    // int pessoas_db_tamanho;
-    // FILE *pessoas_db = fopen(databaseFile, "r+");
+    int codigoErro;
+    FILE *pessoas_db = fopen(databaseFile, "rb+"); // Abre arquivo no modo "rb+" (leitura e escrita em binário)
 
-    // // Armazena o tamanho em bits do arquivo
-    // fseek(pessoas_db, 0, SEEK_END); // Move o cursor para o final do arquivo
-    // pessoas_db_tamanho = ftell(pessoas_db); // Retorna a posição onde o cursor está
-    
-    // // Verifica se o arquivo foi aberto com sucesso
-    // if(pessoas_db == NULL){
-    //     return -1;
-    // }
-    // else if(pessoas_db_tamanho > 0){
-    //     printf("Cheguei aqui. Agora é só desenvolver o cadastro de pessoas. \n");
-    // }
+    // Verifica se o arquivo existe
+    if(pessoas_db == NULL){ // Caso não exista, tentar criar abrin no modo "wb" (escrita em binário)
+        pessoas_db = fopen(databaseFile, "wb");
+        
+        // Guarda os dados do ponteiro em arquivo binário.
+        //   (ponteiro para variáve, tamanho, n items, arquivo)
+        codigoErro = fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
+        fclose(pessoas_db);
+    }else{ // Caso exista
+        fseek(pessoas_db, 0, SEEK_END); // Move o cursor para o final do arquivo
+
+        // Guarda os dados do ponteiro em arquivo binário.
+        //   (ponteiro para variáve, tamanho, n items, arquivo)
+        codigoErro = fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
+        fclose(pessoas_db);
+    }
+    if(codigoErro == 1){
+        printf("Arquivo adicionado com sucesso\n");
+    }else{
+        printf("Cheguei no outro lugar com erro\n");
+    } 
     return EXIT_SUCCESS;
+}
+
+void listClients(){
+    printf("Listar clientes\n");
 }
 
 int main(){
@@ -88,39 +103,51 @@ int main(){
                         "Digite os dados do cliente. \n"
                         "Nome: "
                     );
-                    scanf(" %s", pessoa.name);
+                    // scanf(" %s", pessoa.name);
                     printf("CPF/CNPJ: ");
-                    scanf("%d", &pessoa.cpf_cnpj);
+                    // scanf("%d", &pessoa.cpf_cnpj);
                     printf("Telefone: ");
-                    scanf("%d", &pessoa.phoneNumber);
+                    // scanf("%d", &pessoa.phoneNumber);
                     printf(
                         "Digite o endereço.\n"
                         "Estado: "
                     );
-                    scanf(" %s", pessoa.address.state);
+                    // scanf(" %s", pessoa.address.state);
                     printf("Cidade: ");
-                    scanf(" %s", pessoa.address.city);
+                    // scanf(" %s", pessoa.address.city);
                     printf("Bairro: ");
-                    scanf(" %s", pessoa.address.bairro);
+                    // scanf(" %s", pessoa.address.bairro);
                     printf("Rua: ");
-                    scanf(" %s", pessoa.address.street);
+                    // scanf(" %s", pessoa.address.street);
                     printf("Número: ");
-                    scanf("%d", &pessoa.address.number);
+                    // scanf("%d", &pessoa.address.number);
                     printf("CEP: ");
-                    scanf("%d", &pessoa.address.zipcode);
+                    // scanf("%d", &pessoa.address.zipcode);
+
+                    // Test
+                    strcpy(pessoa.name, "Fulano");
+                    pessoa.cpf_cnpj = 2345312345;
+                    pessoa.phoneNumber = 63747364;
+                    strcpy(pessoa.address.state, "DF");
+                    strcpy(pessoa.address.city, "Brasília");
+                    strcpy(pessoa.address.bairro, "AsaNorte");
+                    strcpy(pessoa.address.street, "Longe");
+                    pessoa.address.number = 333;
+                    pessoa.address.zipcode = 445345345;
+                    // Fim test
 
                     // Cadastrar o cliene "pessoa" e armazena possíveis erros em "codigoErro"
                     codigoErro = addNewClient(pessoa);
 
                     // Verifica se ocorreram erros
                     if(codigoErro == EXIT_SUCCESS){
+                            //"\033[H\033[2J\033[3J"
                         printf(
-                            "\033[H\033[2J\033[3J"
                             "Cliente cadastrado com sucesso. \n"
                         );
                     }else{
+                            //"\033[H\033[2J\033[3J"
                         printf(
-                            "\033[H\033[2J\033[3J"
                             "Ocorreu um erro ao cadastrar o cliente. \n"
                             "Tente novamente. \n"
                         );
@@ -133,6 +160,7 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "Em implementação... \n"
                     );
+                    listClients();
                     break;
                 case 'B':
                 case 'b':
