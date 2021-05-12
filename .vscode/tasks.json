@@ -1,0 +1,64 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "gcc build active file",
+			"command": "/usr/bin/gcc",
+			"args": [
+				//"-g",
+				"-std=c99",
+				//"-pedantic-errors",
+				//"-pedantic",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+            "presentation": {
+                "showReuseMessage": false,
+            },
+			"problemMatcher": [
+				"$gcc"
+			],
+			"detail": "Build with /usr/bin/gcc"
+		},
+		{
+			"type": "shell",
+			"label": "Build and run active file",
+			"command": "${fileDirname}/${fileBasenameNoExtension}",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"dependsOn": [
+				"gcc build active file" //wil run this task before
+			],
+            "presentation": {
+                "clear": true, //Clear the screen
+            },
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Build with gcc and run"
+		},
+		{
+			"type": "shell",
+			"label": "Run active file",
+			"command": "${fileDirname}/${fileBasenameNoExtension}",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+            "presentation": {
+                "clear": true, //Clear the screen
+            },
+			"detail": "Run the active file"
+		}
+	]
+}
