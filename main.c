@@ -29,10 +29,10 @@ typedef struct pessoa{
 // Função para adicionar nova pessoa no banco de dados
 int addNewClient(_PERSON pessoa){
     int codigoErro;
-    FILE *pessoas_db = fopen(databaseFile, "rb+"); // Abre arquivo no modo "rb+" (leitura e escrita em binário)
+    FILE *pessoas_db = fopen(databaseFile, "rb+"); // Abre arquivo no modo leitura e escrita em binário
 
     // Verifica se o arquivo existe
-    if(pessoas_db == NULL){ // Caso não exista, tentar criar abrin no modo "wb" (escrita em binário)
+    if(pessoas_db == NULL){ // Caso não exista, tentar criar abrin no modo escrita em binário
         pessoas_db = fopen(databaseFile, "wb");
         
         // Guarda os dados do ponteiro em arquivo binário.
@@ -56,7 +56,47 @@ int addNewClient(_PERSON pessoa){
 }
 
 void listClients(){
+    _PERSON pessoa[3];
+    FILE *pessoas_db = fopen(databaseFile, "rb"); // Abre arquivo no modo leitura de bináiro
+    int codigoErro;
+
+    // Ler arquivo binário e carrega na memório
+    // (onde guardar, tamanho, vezes, arquivo de origem)
+    codigoErro = fread(&pessoa, sizeof(pessoa), 2, pessoas_db);
     printf("Listar clientes\n");
+    fclose(pessoas_db);
+
+    if(codigoErro == 1){
+        printf("Leitura realizada com sucesso\n");
+        for (int i = 0; i < 3; i++){
+            printf(
+                "Informações encontradas pessoa[%d].\n"
+                "Id: %d\n"
+                "Nome: %s\n"
+                "CPF/CNPJ: %ld\n"
+                "Telefone: %d\n"
+                "Estado: %s\n"
+                "Cidade: %s\n"
+                "Bairro: %s\n"
+                "Rua: %s\n"
+                "Número: %d\n"
+                "CEP: %d\n",
+                i,
+                pessoa[i].id,
+                pessoa[i].name,
+                pessoa[i].cpf_cnpj,
+                pessoa[i].phoneNumber,
+                pessoa[i].address.state,
+                pessoa[i].address.city,
+                pessoa[i].address.bairro,
+                pessoa[i].address.street,
+                pessoa[i].address.number,
+                pessoa[i].address.zipcode
+            );
+        }
+    }else{
+        printf("Erro de leitura\n"); // Exibe erro
+    }
 }
 
 int main(){
@@ -124,8 +164,9 @@ int main(){
                     printf("CEP: ");
                     // scanf("%d", &pessoa.address.zipcode);
 
-                    // Test
-                    strcpy(pessoa.name, "Fulano");
+                    // Entradas para teste.
+                    // Foram suprimidos os scanf para teste
+                    strcpy(pessoa.name, "Fulano2");
                     pessoa.cpf_cnpj = 2345312345;
                     pessoa.phoneNumber = 63747364;
                     strcpy(pessoa.address.state, "DF");
@@ -134,7 +175,7 @@ int main(){
                     strcpy(pessoa.address.street, "Longe");
                     pessoa.address.number = 333;
                     pessoa.address.zipcode = 445345345;
-                    // Fim test
+                    // Fim teste
 
                     // Cadastrar o cliene "pessoa" e armazena possíveis erros em "codigoErro"
                     codigoErro = addNewClient(pessoa);
@@ -160,6 +201,7 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "Em implementação... \n"
                     );
+                    // Listar cliente cadastrados
                     listClients();
                     break;
                 case 'B':
