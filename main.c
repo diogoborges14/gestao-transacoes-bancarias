@@ -28,26 +28,37 @@ typedef struct pessoa{
 
 // Função para adicionar nova pessoa no banco de dados
 int addNewClient(_PERSON pessoa){
-    int codigoErro;
+    short int quantidadeClientesCadastrados;
+    short int codigoErro=0;
     FILE *pessoas_db = fopen(databaseFile, "rb+"); // Abre arquivo no modo leitura e escrita em binário
 
     // Verifica se o arquivo existe
-    if(pessoas_db == NULL){ // Caso não exista, tentar criar abrin no modo escrita em binário
+    if(pessoas_db == NULL){// Caso não exista
+        // Abrir arquivo no modo escrita em binário
         pessoas_db = fopen(databaseFile, "wb");
         
-        // Guarda os dados do ponteiro em arquivo binário.
+        // Adiciona identificador a peossoa
+        pessoa.id = 0;
+        quantidadeClientesCadastrados = 1;
+
+        // Guarda os dados da pessoa e quantidade em arquivo binário.
         //   (ponteiro para variáve, tamanho, n items, arquivo)
-        codigoErro = fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
+        codigoErro += fwrite(&quantidadeClientesCadastrados, sizeof(quantidadeClientesCadastrados), 1, pessoas_db);
+        codigoErro += fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
         fclose(pessoas_db);
-    }else{ // Caso exista
-        fseek(pessoas_db, 0, SEEK_END); // Move o cursor para o final do arquivo
+    }else{// Caso exista
+        // Lê quantos clientes estão cadastrados, incrementa a quatidade de clientes
+        fread(&quantidadeClientesCadastrados, sizeof(quantidadeClientesCadastrados), 1, pessoas_db);
+        printf("Foram encontrados %d clientes.\n", quantidadeClientesCadastrados);
+        quantidadeClientesCadastrados += 1;
 
         // Guarda os dados do ponteiro em arquivo binário.
         //   (ponteiro para variáve, tamanho, n items, arquivo)
-        codigoErro = fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
+        codigoErro += fwrite(&quantidadeClientesCadastrados, sizeof(quantidadeClientesCadastrados), 1, pessoas_db);
+        codigoErro += fwrite(&pessoa, sizeof(pessoa), 1, pessoas_db);
         fclose(pessoas_db);
     }
-    if(codigoErro == 1){
+    if(codigoErro == 2){
         printf("Arquivo adicionado com sucesso\n");
     }else{
         printf("Cheguei no outro lugar com erro\n");
@@ -58,15 +69,19 @@ int addNewClient(_PERSON pessoa){
 void listClients(){
     _PERSON pessoa[3];
     FILE *pessoas_db = fopen(databaseFile, "rb"); // Abre arquivo no modo leitura de bináiro
-    int codigoErro;
+    short int quantidadeClientesCadastrados=0;
+    short int codigoErro=0;
 
-    // Ler arquivo binário e carrega na memório
+    // Ler arquivo binário e carregar na memório
     // (onde guardar, tamanho, vezes, arquivo de origem)
-    codigoErro = fread(&pessoa, sizeof(pessoa), 2, pessoas_db);
-    printf("Listar clientes\n");
+    codigoErro += fread(&quantidadeClientesCadastrados, sizeof(quantidadeClientesCadastrados), 1, pessoas_db);
+    printf("Quantidade de pessoas encontradas: %d\n", quantidadeClientesCadastrados);
+    codigoErro += fread(&pessoa, sizeof(pessoa), 3, pessoas_db);
     fclose(pessoas_db);
+    
 
-    if(codigoErro == 1){
+    printf("Listaando clientes encontrados...\n");
+    if(codigoErro > 0){
         printf("Leitura realizada com sucesso\n");
         for (int i = 0; i < 3; i++){
             printf(
@@ -101,7 +116,7 @@ void listClients(){
 
 int main(){
    	setlocale(LC_ALL,"Portuguese");
-    int codigoErro;
+    short int codigoErro;
     _PERSON pessoa;
 	char option;
 
@@ -127,6 +142,7 @@ int main(){
                 "B – Buscar cliente já cadastrado \n"
                 "A – Atualizar um cliente cadastrado \n"
                 "E – Excluir um cliente cadastrado \n"
+                "V - Voltar ao menu anterior \n"
                 "S – Sair \n"
                 "Digite um comando para prosseguir: "
             );
@@ -228,6 +244,12 @@ int main(){
                         "Em implementação... \n"
                     );
                     break;
+                case 'V':
+                case 'v':
+                    printf("\033[H\033[2J\033[3J");
+                    main(); // Volta ao menú anterior
+                    return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
+                    break;
                 case 'S':
                 case 's':
                     printf(
@@ -255,6 +277,7 @@ int main(){
                 "D – Realizar um depósito em uma conta. \n"
                 "T – Realizar transferência entre contas. \n"
                 "E – Exibir extrato de uma conta. \n"
+                "V - Voltar ao menu anterior \n"
                 "S – Sair \n"
                 "Digite um comando para prosseguir: "
             );
@@ -318,6 +341,12 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "Em implementação... \n"
                     );
+                    break;
+                case 'V':
+                case 'v':
+                    printf("\033[H\033[2J\033[3J");
+                    main(); // Volta ao menú anterior
+                    return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
                     break;
                 case 'S':
                 case 's':
