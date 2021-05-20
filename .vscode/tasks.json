@@ -10,9 +10,11 @@
 				"-std=c99",
 				//"-pedantic-errors",
 				//"-pedantic",
-				"${file}",
+				"${file}", // Arquivo principal
+				"${workspaceFolder}/lib/listaDeDados.c",
 				"-o",
-				"${fileDirname}/${fileBasenameNoExtension}"
+				"${fileDirname}/${fileBasenameNoExtension}",
+				"-lm"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

@@ -3,29 +3,12 @@
 #include <stdio.h>
 #include <locale.h> // Localização, caracteres
 #include <string.h> // Trabalhar com strings
+#include "./lib/listaDeDados.h"
 #define EXIT_SUCCESS 0
 #define EXIT_ERROR -1
+
+/*
 #define databaseFile "database.data"
-
-// Define estrutura para endereços tipo _ADDRESS
-typedef struct endereco{
-    char state[20];
-    char city[20];
-    char bairro[20];
-    char street[40];
-    unsigned short int number;
-    unsigned int zipcode;
-}_ADDRESS;
-
-// Define estrutura para pressoas do tipo _PERSON
-typedef struct pessoa{
-    unsigned short int id;
-    char name[40];
-    long int cpf_cnpj;
-    unsigned int phoneNumber;
-    _ADDRESS address;
-}_PERSON;
-
 // Função para adicionar nova pessoa no banco de dados
 int addNewClient(_PERSON pessoa){
     short int quantidadeClientesCadastrados;
@@ -113,12 +96,26 @@ void listClients(){
         printf("Erro de leitura\n"); // Exibe erro
     }
 }
+*/
+
+_PERSON_LIST *clientes;
+int execTimes = 0;
 
 int main(){
    	setlocale(LC_ALL,"Portuguese");
     short int codigoErro;
+    unsigned long codigoParaConsultar;
     _PERSON pessoa;
+    _PERSON *pessoaTEMP;
 	char option;
+    int i;
+
+    // Cria a lista de clientes somente 1 vez
+    if(execTimes == 0){
+        // Cria lista de pessoas com nome 'clientes'
+        clientes = newPesonList();
+        execTimes++;
+    }
 
     printf(
         "=============== Bem vindo! ================= \n"
@@ -194,17 +191,23 @@ int main(){
                     // Fim teste
 
                     // Cadastrar o cliene "pessoa" e armazena possíveis erros em "codigoErro"
-                    codigoErro = addNewClient(pessoa);
+                    // codigoErro = addNewClient(pessoa);
+                    codigoErro = addPerson(clientes, pessoa);
 
                     // Verifica se ocorreram erros
-                    if(codigoErro == EXIT_SUCCESS){
-                            //"\033[H\033[2J\033[3J"
+                    if(codigoErro == 1){
                         printf(
+                            //"\033[H\033[2J\033[3J"
                             "Cliente cadastrado com sucesso. \n"
                         );
-                    }else{
-                            //"\033[H\033[2J\033[3J"
+                    }else if(codigoErro == -1){
                         printf(
+                            //"\033[H\033[2J\033[3J"
+                            "Cliente já cadastrado. \n"
+                        );
+                    }else{
+                        printf(
+                            //"\033[H\033[2J\033[3J"
                             "Ocorreu um erro ao cadastrar o cliente. \n"
                             "Tente novamente. \n"
                         );
@@ -213,28 +216,186 @@ int main(){
                 case 'L':
                 case 'l':
                     printf(
-                        "L – Listar todos os clientes cadastrados \n"
                         "\033[H\033[2J\033[3J"
-                        "Em implementação... \n"
+                        "L – Listar todos os clientes cadastrados \n\n"
+                        "Foram encontrados: %d clientes. \n",
+                        clientes->quantity
                     );
-                    // Listar cliente cadastrados
-                    listClients();
+                    
+                    // Verifica se existem clientes cadastados
+                    if(isEmpityPersonList(clientes)){
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Nenhum cliente cadastrado.\n"
+                        );
+                        break; // Sai do case
+                    }
+
+                    // Lista todos os cliente cadastrados
+                    for(i = 0; i < clientes->quantity; i++){
+                        printf(
+                            "-----------------------------------\n"
+                            "Id: %d\n"
+                            "Nome: %s\n"
+                            "CPF/CNPJ: %ld\n"
+                            "Telefone: %d\n"
+                            "Estado: %s\n"
+                            "Cidade: %s\n"
+                            "Bairro: %s\n"
+                            "Rua: %s\n"
+                            "Número: %d\n"
+                            "CEP: %d\n",
+                            clientes->dados[i].id,
+                            clientes->dados[i].name,
+                            clientes->dados[i].cpf_cnpj,
+                            clientes->dados[i].phoneNumber,
+                            clientes->dados[i].address.state,
+                            clientes->dados[i].address.city,
+                            clientes->dados[i].address.bairro,
+                            clientes->dados[i].address.street,
+                            clientes->dados[i].address.number,
+                            clientes->dados[i].address.zipcode
+                        );
+                    }
+
+                    // Aguarda apertar enter para continar
+                    printf("\nPressione enter para continuar...\n");
+                    while((getchar() == '\n'));
+
+                    printf("\033[H\033[2J\033[3J");
                     break;
                 case 'B':
                 case 'b':
                     printf(
                         "B – Buscar cliente já cadastrado \n"
-                        "\033[H\033[2J\033[3J"
-                        "Em implementação... \n"
+                        "Digite o Id ou CPF/CNPJ: "
                     );
+                    scanf("%lu", &codigoParaConsultar);
+
+                    // Obtém a pessoa consultada e armazena no buffer pessoaTEMP
+                    codigoErro = getPerson(clientes, codigoParaConsultar, pessoaTEMP);
+
+                    if(codigoErro){
+                        // Mostrando pessoa encontrada
+                        printf(
+                            "Id: %d\n"
+                            "Nome: %s\n"
+                            "CPF/CNPJ: %ld\n"
+                            "Telefone: %d\n"
+                            "Estado: %s\n"
+                            "Cidade: %s\n"
+                            "Bairro: %s\n"
+                            "Rua: %s\n"
+                            "Número: %d\n"
+                            "CEP: %d\n",
+                            pessoaTEMP->id,
+                            pessoaTEMP->name,
+                            pessoaTEMP->cpf_cnpj,
+                            pessoaTEMP->phoneNumber,
+                            pessoaTEMP->address.state,
+                            pessoaTEMP->address.city,
+                            pessoaTEMP->address.bairro,
+                            pessoaTEMP->address.street,
+                            pessoaTEMP->address.number,
+                            pessoaTEMP->address.zipcode
+                        );
+                    }else{
+                        printf("Não foi possível encontrar a pessoa. \n");
+                    }
                     break;
                 case 'A':
                 case 'a':
                     printf(
-                        "A – Atualizar um cliente cadastrado \n"
                         "\033[H\033[2J\033[3J"
-                        "Em implementação... \n"
+                        "A – Atualizar um cliente cadastrado \n\n"
+                        "Digite o Id ou CPF/CNPJ: "
                     );
+                    scanf("%lu", &codigoParaConsultar);
+
+                    // Obtem o Index do cliente
+                    i = getPersonIndex(clientes, codigoParaConsultar);
+                    
+                    // Verifica se o cliente existe
+                    if(i >= 0){
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Cliente encontrado: \n"
+                            "-----------------------------------\n"
+                            "Id: %d\n"
+                            "Nome: %s\n"
+                            "CPF/CNPJ: %ld\n"
+                            "Telefone: %d\n"
+                            "Estado: %s\n"
+                            "Cidade: %s\n"
+                            "Bairro: %s\n"
+                            "Rua: %s\n"
+                            "Número: %d\n"
+                            "CEP: %d\n"
+                            "-----------------------------------\n",
+                            clientes->dados[i].id,
+                            clientes->dados[i].name,
+                            clientes->dados[i].cpf_cnpj,
+                            clientes->dados[i].phoneNumber,
+                            clientes->dados[i].address.state,
+                            clientes->dados[i].address.city,
+                            clientes->dados[i].address.bairro,
+                            clientes->dados[i].address.street,
+                            clientes->dados[i].address.number,
+                            clientes->dados[i].address.zipcode
+                        );
+                        printf(
+                            "Digite os novos dados do cliente.\n"
+                            "Nome: "
+                        );
+                        scanf(" %s", pessoa.name);
+                        printf("CPF/CNPJ: ");
+                        scanf("%ld", &pessoa.cpf_cnpj);
+                        printf("Telefone: ");
+                        scanf("%d", &pessoa.phoneNumber);
+                        printf(
+                            "Digite o endereço.\n"
+                            "Estado: "
+                        );
+                        scanf(" %s", pessoa.address.state);
+                        printf("Cidade: ");
+                        scanf(" %s", pessoa.address.city);
+                        printf("Bairro: ");
+                        scanf(" %s", pessoa.address.bairro);
+                        printf("Rua: ");
+                        scanf(" %s", pessoa.address.street);
+                        printf("Número: ");
+                        scanf("%hu", &pessoa.address.number);
+                        printf("CEP: ");
+                        scanf("%d", &pessoa.address.zipcode);
+
+                        // Atualiza dados do cliente
+                        codigoErro = updatePerson(clientes, i, pessoa); // (lista, index, cliente)
+
+                        if(codigoErro){
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Dados atualizados com sucesso.\n"
+                            );
+                        }else{
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Não foi possível atualizar os dados. \n"
+                            );
+                        }
+                    }else if(i == -1){
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Não foi possível procurar o cliente. \n"
+                            "Isso pode ser ocasionado por erro no banco de bacos. \n"
+                            "Código erro: %d\n",
+                            i
+                        );
+                    }else if(i == 2){
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Cliente não encontrado. \n"
+                        );
+                    }
                     break;
                 case 'E':
                 case 'e':
