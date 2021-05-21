@@ -99,16 +99,15 @@ void listClients(){
 */
 
 _PERSON_LIST *clientes;
+_PERSON pessoa;
+unsigned long codigoParaConsultar;
 int execTimes = 0;
+short int codigoErro;
+char option;
+int i;
 
 int main(){
    	setlocale(LC_ALL,"Portuguese");
-    short int codigoErro;
-    unsigned long codigoParaConsultar;
-    _PERSON pessoa;
-    _PERSON *pessoaTEMP;
-	char option;
-    int i;
 
     // Cria a lista de clientes somente 1 vez
     if(execTimes == 0){
@@ -154,8 +153,10 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "C – Cadastrar um cliente \n\n"
                         "Digite os dados do cliente. \n"
-                        "Nome: "
+                        "Id: "
                     );
+                    // scanf("%hd", pessoa.id);
+                    printf("Nome: ");
                     // scanf(" %s", pessoa.name);
                     printf("CPF/CNPJ: ");
                     // scanf("%d", &pessoa.cpf_cnpj);
@@ -179,8 +180,9 @@ int main(){
 
                     // Entradas para teste.
                     // Foram suprimidos os scanf para teste
-                    strcpy(pessoa.name, "Fulano2");
-                    pessoa.cpf_cnpj = 2345312345;
+                    pessoa.id = 336;
+                    strcpy(pessoa.name, "Fulano");
+                    pessoa.cpf_cnpj = 1345312345;
                     pessoa.phoneNumber = 63747364;
                     strcpy(pessoa.address.state, "DF");
                     strcpy(pessoa.address.city, "Brasília");
@@ -197,17 +199,17 @@ int main(){
                     // Verifica se ocorreram erros
                     if(codigoErro == 1){
                         printf(
-                            //"\033[H\033[2J\033[3J"
+                            "\033[H\033[2J\033[3J"
                             "Cliente cadastrado com sucesso. \n"
                         );
                     }else if(codigoErro == -1){
                         printf(
-                            //"\033[H\033[2J\033[3J"
+                            "\033[H\033[2J\033[3J"
                             "Cliente já cadastrado. \n"
                         );
                     }else{
                         printf(
-                            //"\033[H\033[2J\033[3J"
+                            "\033[H\033[2J\033[3J"
                             "Ocorreu um erro ao cadastrar o cliente. \n"
                             "Tente novamente. \n"
                         );
@@ -218,7 +220,7 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J"
                         "L – Listar todos os clientes cadastrados \n\n"
-                        "Foram encontrados: %d clientes. \n",
+                        "Foram encontrados: %d cliente(s). \n",
                         clientes->quantity
                     );
                     
@@ -259,7 +261,7 @@ int main(){
                     }
 
                     // Aguarda apertar enter para continar
-                    printf("\nPressione enter para continuar...\n");
+                    printf("\nPressione 'q' para continuar...\n");
                     while((getchar() == '\n'));
 
                     printf("\033[H\033[2J\033[3J");
@@ -267,17 +269,19 @@ int main(){
                 case 'B':
                 case 'b':
                     printf(
-                        "B – Buscar cliente já cadastrado \n"
+                        "\033[H\033[2J\033[3J"
+                        "B – Buscar cliente já cadastrado \n\n"
                         "Digite o Id ou CPF/CNPJ: "
                     );
                     scanf("%lu", &codigoParaConsultar);
 
-                    // Obtém a pessoa consultada e armazena no buffer pessoaTEMP
-                    codigoErro = getPerson(clientes, codigoParaConsultar, pessoaTEMP);
+                    // Obtém a pessoa consultada e armazena no buffer pessoa
+                    codigoErro = getPerson(clientes, codigoParaConsultar, &pessoa);
 
                     if(codigoErro){
                         // Mostrando pessoa encontrada
                         printf(
+                            "-----------------------------------\n"
                             "Id: %d\n"
                             "Nome: %s\n"
                             "CPF/CNPJ: %ld\n"
@@ -288,19 +292,26 @@ int main(){
                             "Rua: %s\n"
                             "Número: %d\n"
                             "CEP: %d\n",
-                            pessoaTEMP->id,
-                            pessoaTEMP->name,
-                            pessoaTEMP->cpf_cnpj,
-                            pessoaTEMP->phoneNumber,
-                            pessoaTEMP->address.state,
-                            pessoaTEMP->address.city,
-                            pessoaTEMP->address.bairro,
-                            pessoaTEMP->address.street,
-                            pessoaTEMP->address.number,
-                            pessoaTEMP->address.zipcode
+                            pessoa.id,
+                            pessoa.name,
+                            pessoa.cpf_cnpj,
+                            pessoa.phoneNumber,
+                            pessoa.address.state,
+                            pessoa.address.city,
+                            pessoa.address.bairro,
+                            pessoa.address.street,
+                            pessoa.address.number,
+                            pessoa.address.zipcode
                         );
+                        // Aguarda apertar enter para continar
+                        printf("\nPressione 'q' para continuar...\n");
+                        while((getchar() == '\n'));
+                        printf("\033[H\033[2J\033[3J");
                     }else{
-                        printf("Não foi possível encontrar a pessoa. \n");
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Não foi possível encontrar a pessoa. \n"
+                        );
                     }
                     break;
                 case 'A':
@@ -347,7 +358,11 @@ int main(){
                             "Digite os novos dados do cliente.\n"
                             "Nome: "
                         );
-                        scanf(" %s", pessoa.name);
+                        // Limpa buffer stdin
+                        while(getchar() != '\n');
+                        fgets(pessoa.name, MAX_NAME, stdin);
+                        // Limpa buffer stdin
+                        while(getchar() != '\n');
                         printf("CPF/CNPJ: ");
                         scanf("%ld", &pessoa.cpf_cnpj);
                         printf("Telefone: ");
@@ -390,7 +405,7 @@ int main(){
                             "Código erro: %d\n",
                             i
                         );
-                    }else if(i == 2){
+                    }else if(i == -2){
                         printf(
                             "\033[H\033[2J\033[3J"
                             "Cliente não encontrado. \n"
@@ -403,7 +418,10 @@ int main(){
                         "E – Excluir um cliente cadastrado \n"
                         "\033[H\033[2J\033[3J"
                         "Em implementação... \n"
+                        "Digite o Id ou CPF/CNPJ: "
                     );
+                    scanf("%lu", &codigoParaConsultar);
+                    removePerson(clientes, codigoParaConsultar);
                     break;
                 case 'V':
                 case 'v':
@@ -417,6 +435,10 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "Saindo... \n"
                     );
+
+                    // Libera da memória e salva em arquivo
+                    closePersonList(clientes);
+
                     // Encerra o programa
                     return EXIT_SUCCESS;
                 default:
@@ -515,6 +537,10 @@ int main(){
                         "\033[H\033[2J\033[3J"
                         "Saindo... \n"
                     );
+
+                    // Libera da memória e salva em arquivo
+                    closePersonList(clientes);
+
                     // Encerra o programa
                     return EXIT_SUCCESS;
                 default:
@@ -530,6 +556,10 @@ int main(){
                 "\033[H\033[2J\033[3J"
                 "Saindo... \n"
             );
+            
+            // Libera da memória e salva em arquivo
+            closePersonList(clientes);
+
             // Encerra o programa
             return EXIT_SUCCESS;
         default:

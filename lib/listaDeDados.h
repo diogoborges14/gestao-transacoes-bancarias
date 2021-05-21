@@ -93,13 +93,16 @@ int isEmpityPersonList(_PERSON_LIST* list);
 int addPerson(_PERSON_LIST* list, _PERSON person);
 
 // Remove da lista de qualquer posição passando código(id ou CPF/CNPJ)
-int removePerson(_PERSON_LIST* list, int code);
+int removePerson(_PERSON_LIST* list, unsigned long code);
 
 // Obtém o Index na lista passando código(id ou CPF/CNPJ)
 int getPersonIndex(_PERSON_LIST* list, unsigned long code);
 
 // Consultar na lista passando código(id ou CPF/CNPJ)
 int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person);
+
+// Consultar na lista passando nome
+int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person);
 
 // Atualiza informações de cliente passando Index
 int updatePerson(_PERSON_LIST* list, int index, _PERSON person);
