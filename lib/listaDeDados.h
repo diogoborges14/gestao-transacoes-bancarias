@@ -6,7 +6,7 @@
     Biblioteca para trabalhar com lista sequêncial e tratar dados
     permitindo criação, remoção, adição e consulta
 
-    (c) 2121 Diogo B. Silva
+    (c) 2021 Diogo B. Silva
 */
 
 /* **************** Library settings *************** */

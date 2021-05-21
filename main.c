@@ -415,13 +415,75 @@ int main(){
                 case 'E':
                 case 'e':
                     printf(
-                        "E – Excluir um cliente cadastrado \n"
                         "\033[H\033[2J\033[3J"
-                        "Em implementação... \n"
+                        "E – Excluir um cliente cadastrado \n\n"
                         "Digite o Id ou CPF/CNPJ: "
                     );
                     scanf("%lu", &codigoParaConsultar);
-                    removePerson(clientes, codigoParaConsultar);
+
+                    // Tenta obter o cliente
+                    codigoErro = getPerson(clientes, codigoParaConsultar, &pessoa);
+
+                    // Verifica se a cliente foi encontrado
+                    if(codigoErro){
+                        // Mostrando pessoa encontrada
+                        printf(
+                            "-----------------------------------\n"
+                            "Id: %d\n"
+                            "Nome: %s\n"
+                            "CPF/CNPJ: %ld\n"
+                            "Telefone: %d\n"
+                            "Estado: %s\n"
+                            "Cidade: %s\n"
+                            "Bairro: %s\n"
+                            "Rua: %s\n"
+                            "Número: %d\n"
+                            "CEP: %d\n",
+                            pessoa.id,
+                            pessoa.name,
+                            pessoa.cpf_cnpj,
+                            pessoa.phoneNumber,
+                            pessoa.address.state,
+                            pessoa.address.city,
+                            pessoa.address.bairro,
+                            pessoa.address.street,
+                            pessoa.address.number,
+                            pessoa.address.zipcode
+                        );
+                        // Aguarda confirmação para continar
+                        printf("\nTem certeza que deseja exluir o cliente? (s/n)\n");
+                        scanf(" %c", &option);
+                        
+                        // Verifica a resposta
+                        if(option == 's'){
+                            // Excluí o cliente
+                            codigoErro = removePerson(clientes, codigoParaConsultar);
+                        
+                            // Verifi se ocorreu erro
+                            if(codigoErro){
+                                printf(
+                                    "\033[H\033[2J\033[3J"
+                                    "Cliente excuído com sucesso. \n"
+                                );
+                            }else{
+                                printf(
+                                    "\033[H\033[2J\033[3J"
+                                    "Ocorreu um erro ao excuir o cliente. Cod.: %hd\n",
+                                    codigoErro
+                                );
+                            }
+                        }else{
+                            printf(
+                            "\033[H\033[2J\033[3J"
+                            "Cliente não foi excuído. \n"
+                            );
+                        }
+                    }else{
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Cliente não encontrado. \n"
+                        );
+                    }
                     break;
                 case 'V':
                 case 'v':

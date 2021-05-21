@@ -2,7 +2,7 @@
     Biblioteca para trabalhar com lista sequêncial e tratar dados
     permitindo criação, remoção, adição e consulta
 
-    (c) 2121 Diogo B. Silva
+    (c) 2021 Diogo B. Silva
 */
 #include <stddef.h> // Necessário para definir o tipo NULL
 #include <stdlib.h> // Necessário para gerenciamento de memória dinâmico (malloc, free)
@@ -119,18 +119,25 @@ int addPerson(_PERSON_LIST* list, _PERSON person){
 
 // Remove da lista de qualquer posição passando código(id ou CPF/CNPJ)
 int removePerson(_PERSON_LIST* list, unsigned long code){
-
+    int i=0;
     printf("Em imprementação ...\n");
 
     // Obtém o índice onde a pessoa está alocada
     int personIndex = getPersonIndex(list, code);
 
-    // // Verifica se o valor é válido. Valores negativos indicam erro
+    // Verifica se o valor é válido. Valores negativos indicam erro
     if(personIndex >= 0){
+        // Move os itens para esquerda ← sobrescevendo o primeiro item
+        for (i = personIndex; i < list->quantity; i++){
+            /*                 próximo elemento inserido
+            se torna o elemento anterior               */
+            list->dados[i] = list->dados[i+1];
+        }
+        
         // Apaga a última pessoa adicionado indicando que a última posição está vaga
         list->quantity--;
-        return 1; // Retorna 1 (verdadeiro)
-        printf("Último cliente excluído");
+        printf("Cliente excluído. \n");
+        return 1; // Retorna 1 (verdadeiro), indicando que foi excluído com sucesso
     }else{
         return 0; // Retorna 0 (falso), indicando que não foi possível encontrar a pessoa
     }
