@@ -57,28 +57,28 @@ typedef struct conta{
 // Define a estrutura que armazenará as contas bancárias
 typedef struct listaContas{
     int quantity;
-    _ACCOUNT dados[MAX_ACCOUNT]; // Criar vetor dados do tipo _ACCOUNT
+    _ACCOUNT accountData[MAX_ACCOUNT]; // Criar vetor accountData do tipo _ACCOUNT
 }_ACCOUNT_LIST;
 
 // Define a estrutura que armazenará extrato bancário
 typedef struct listaExtrato{
     int quantity;
-    _STATMENT dados[MAX_STATMENT]; // Criar vetor dados do tipo _STATMENT
+    _STATMENT statmentData[MAX_STATMENT]; // Criar vetor statmentData do tipo _STATMENT
 }_STATMENT_LIST;
 
 // Define a estrutura que vai armazenar ao clientes
 typedef struct listaClientes{
     int quantity;
-    _PERSON dados[MAX_PERSON]; // Criar vetor dados do tipo _PERSON
+    _PERSON peopleData[MAX_PERSON]; // Criar vetor peopleData do tipo _PERSON
 }_PERSON_LIST;
 
 /* ************* PERSON LIST FUNCTIONS ************* */
 
-// Função que cria a lista de clientes
+// Função que cria a lista de clientes e carrega clientes salvos em arquivo
 _PERSON_LIST* newPesonList();
 
-// Função que limpa a lista da memória
-void closePersonList(_PERSON_LIST* list);
+// Função que grava clientes em arquivo e limpa a lista da memória
+int closePersonList(_PERSON_LIST* list);
 
 // Verifica o tamanho da lista
 int lenthPersonList(_PERSON_LIST* list);
@@ -104,8 +104,8 @@ int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person);
 // Consultar na lista passando nome
 int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person);
 
-// Atualiza informações de cliente passando Index
-int updatePerson(_PERSON_LIST* list, int index, _PERSON person);
+// Atualiza informações passando código(id ou CPF/CNPJ)
+int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person);
 
 /* ************* ACCOUNT LIST FUNCTIONS ************ */
 

@@ -4,7 +4,6 @@
 
     (c) 2021 Diogo B. Silva
 */
-#include <stddef.h> // Necessário para definir o tipo NULL
 #include <stdlib.h> // Necessário para gerenciamento de memória dinâmico (malloc, free)
 #include <stdio.h> // Necessário para manipular arquivos (fopen, fclose, fwrite, fread)
 #include "listaDeDados.h"
@@ -14,26 +13,27 @@
 
 /* ************* PERSON LIST FUNCTIONS ************* */
 
-// Função que cria a lista de clientes
+// Função que cria a lista de clientes e carrega clientes salvos em arquivo
 _PERSON_LIST* newPesonList(){
-    FILE *pessoas_db = fopen(personDB, "rb"); // Abre arquivo no modo leitura em binário
+    FILE *arquivoComClientes = fopen(personDB, "rb"); // Abre arquivo no modo leitura em binário
     short int codigoErro=0;
     _PERSON_LIST *list; // Cria ponteiro para uma lista
 
     // Aloca espaço para uma lista de clientes do tipo (_PERSON_LIST*)
     list = (_PERSON_LIST*) malloc(sizeof(_PERSON_LIST));
+
     // Se deu certo
     if(list != NULL){
         list->quantity = 0; // Atribuí 0 para quantidade da lista
     }
 
     // Verifica se existe um arquivo com clientes.
-    if(pessoas_db != NULL){
-        // Lê os dados dos clientes
-        //   (ponteiro para variável, tamanho, n items, arquivo)
-        codigoErro = fread(list, sizeof(_PERSON_LIST), 1, pessoas_db);
-        fclose(pessoas_db);
-        
+    if(arquivoComClientes != NULL){
+        // Lê os dados dos clientes do arquivo
+        //          (ponteiro para variável, tamanho, n items, arquivo)
+        codigoErro = fread(list, sizeof(_PERSON_LIST), 1, arquivoComClientes);
+        fclose(arquivoComClientes);
+
         // Verifica se ocorreu erro ao ler o arquivo
         if(codigoErro == 1){
             printf("Clientes carregados com sucesso. \n");
@@ -46,23 +46,25 @@ _PERSON_LIST* newPesonList(){
     return list;
 }
 
-// Função que limpa a lista da memória
-void closePersonList(_PERSON_LIST* list){
-    FILE *pessoas_db = fopen(personDB, "wb"); // Abre arquivo no modo escrita em binário
+// Função que grava clientes em arquivo e limpa a lista da memória
+int closePersonList(_PERSON_LIST* list){
+    FILE *arquivoComClientes = fopen(personDB, "wb"); // Abre arquivo no modo escrita em binário
     short int codigoErro=0;
-    
-    // Guarda os dados dos clientes
-    //   (ponteiro para variável, tamanho, n items, arquivo)
-    codigoErro = fwrite(list, sizeof(_PERSON_LIST), 1, pessoas_db);
-    fclose(pessoas_db);
 
-    if(codigoErro == 1){
-        printf("Clientes salvos com sucesso. \n");
-    }else{
-        printf("Erro ao salvar os clientes. Cod.: %d\n", codigoErro);
+    // Guarda os dados dos clientes no arquivo
+    //           (ponteiro para variável, tamanho, n items, arquivo)
+    codigoErro = fwrite(list, sizeof(_PERSON_LIST), 1, arquivoComClientes);
+    fclose(arquivoComClientes);
+
+    // Verifica se ocorreu erro ou se a lista é nula
+    if(codigoErro != 1 || list == NULL){
+        return 0; // Retorna 0 (falso), indicando que não foi possível gravar o arquivo
     }
 
+    // Libera a lista da memória
     free(list);
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso ao gravar lista e liberar lista da memória
 }
 
 // Verifica o tamanho da lista
@@ -103,15 +105,15 @@ int addPerson(_PERSON_LIST* list, _PERSON person){
         return 0; // Retorna 0 (falso), indicando que não foi possível adicionar na lista
     }
 
-    // Verifica se CPF/CNPJ já está cadastrado. Valores negativos indicam erro
-    if(getPersonIndex(list, person.cpf_cnpj) >= 0){
-        return -1; // Retorna erro -1, indicando que a pessoa já está cadastrada
+    // Verifica se CPF/CNPJ ou Id já está cadastrado. Valores positivos indicam que foi encontrado
+    if((getPersonIndex(list, person.cpf_cnpj) >= 0) || (getPersonIndex(list, person.id) >= 0)){
+        return -1; // Retorna erro -1, indicando que o CPF/CNPJ ou Id já está cadastrada
     }
 
     // Faz uma varredura no nome dos clientes para decidir em qual posição colocar
 
     // Insere no final por enquanto
-    list->dados[list->quantity] = person;
+    list->peopleData[list->quantity] = person;
     list->quantity++;
 
     return 1; // Retorna 1 (verdadeiro), indicando sucesso na adição
@@ -120,7 +122,6 @@ int addPerson(_PERSON_LIST* list, _PERSON person){
 // Remove da lista de qualquer posição passando código(id ou CPF/CNPJ)
 int removePerson(_PERSON_LIST* list, unsigned long code){
     int i=0;
-    printf("Em imprementação ...\n");
 
     // Obtém o índice onde a pessoa está alocada
     int personIndex = getPersonIndex(list, code);
@@ -131,12 +132,11 @@ int removePerson(_PERSON_LIST* list, unsigned long code){
         for (i = personIndex; i < list->quantity; i++){
             /*                 próximo elemento inserido
             se torna o elemento anterior               */
-            list->dados[i] = list->dados[i+1];
+            list->peopleData[i] = list->peopleData[i+1];
         }
         
         // Apaga a última pessoa adicionado indicando que a última posição está vaga
         list->quantity--;
-        printf("Cliente excluído. \n");
         return 1; // Retorna 1 (verdadeiro), indicando que foi excluído com sucesso
     }else{
         return 0; // Retorna 0 (falso), indicando que não foi possível encontrar a pessoa
@@ -159,14 +159,14 @@ int getPersonIndex(_PERSON_LIST* list, unsigned long code){
     }
 
     // Verifica se o código é um ID ou CPF/CNPJ
-    if(code < 999){ // Se menor que 999 → id
+    if(code < 65536){ // Se menor que 65536 → id
         // Percorre os índices procurando pelo ID
-        while((code != list->dados[i].id) && (i < list->quantity)){
+        while((code != list->peopleData[i].id) && (i < list->quantity)){
             i++;
         }
     }else{ // Senão → CPF/CNPJ
         // Percorre os índices procurando pelo CPF/CNPJ
-        while ((code != list->dados[i].cpf_cnpj) && (i < list->quantity)){
+        while ((code != list->peopleData[i].cpf_cnpj) && (i < list->quantity)){
             i++;
         }
     }
@@ -188,7 +188,7 @@ int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person){
     // Verifica se o valor é válido. Valores negativos indicam erro
     if(personIndex >= 0){
         // Armazena a pessoa encontrada no ponteiro recebido na função
-        *person = list->dados[personIndex];
+        *person = list->peopleData[personIndex];
         return 1; // Retorna 1 (verdadeiro)
     }else{
         return 0; // Retorna 0 (falso), indicando que não foi possível encontrar a pessoa
@@ -198,15 +198,20 @@ int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person){
 // Consultar na lista passando nome
 int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person);
 
-// Atualiza informações de cliente passando Index
-int updatePerson(_PERSON_LIST* list, int index, _PERSON person){
-    // Verifica se a lista é válido
-    if(list == NULL){
+// Atualiza informações passando código(id ou CPF/CNPJ)
+int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person){
+    int personIndex=-1;
+
+    // Obtém o índice onde a pessoa está alocada
+    personIndex = getPersonIndex(list, code);
+
+    // Verifica se a lista é válido e se o índice encontrado é válido
+    if(list == NULL || personIndex < 0){
         return 0; // Retorna 0 (falso), indicando que não foi possível atualizar as informações
     }
 
     // Atualiza as informações recebidas
-    list->dados[index] = person;
+    list->peopleData[personIndex] = person;
 
     return 1; // Retorna 1 (verdadeiro), indicando que foi atualizado com sucesso
 }
