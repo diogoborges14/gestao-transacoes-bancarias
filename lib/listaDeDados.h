@@ -107,6 +107,9 @@ int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person);
 // Atualiza informações passando código(id ou CPF/CNPJ)
 int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person);
 
+// Reorganiza a lista em ordem alfabética
+void personListToAlphabeticalOrder(_PERSON_LIST* list);
+
 /* ************* ACCOUNT LIST FUNCTIONS ************ */
 
 /* ************ STATMENT LIST FUNCTIONS ************ */

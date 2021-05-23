@@ -13,8 +13,7 @@
 				"${file}", // Arquivo principal
 				"${workspaceFolder}/lib/listaDeDados.c",
 				"-o",
-				"${fileDirname}/${fileBasenameNoExtension}",
-				"-lm"
+				"${fileDirname}/${fileBasenameNoExtension}"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

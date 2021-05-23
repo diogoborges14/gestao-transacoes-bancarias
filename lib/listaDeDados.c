@@ -6,10 +6,15 @@
 */
 #include <stdlib.h> // Necessário para gerenciamento de memória dinâmico (malloc, free)
 #include <stdio.h> // Necessário para manipular arquivos (fopen, fclose, fwrite, fread)
+#include <string.h> // Necessário para manipular strings (strcmp)
+#include <ctype.h> // Necessário para trocar caracteres maísculos e minúsculos(toupper)
 #include "listaDeDados.h"
+
+/* **************** Library settings *************** */
 #define personDB "clients.data" // Arquivo que armazena informações sobre clientes
 #define accountDB "accounts.data" // Arquivo que armazena informações sobre contas bancárias
 #define statmentDB "statment.data" // Arquivo que armazena informações sobre extrato
+#define ID_MAX_NUMBER 65536
 
 /* ************* PERSON LIST FUNCTIONS ************* */
 
@@ -110,11 +115,12 @@ int addPerson(_PERSON_LIST* list, _PERSON person){
         return -1; // Retorna erro -1, indicando que o CPF/CNPJ ou Id já está cadastrada
     }
 
-    // Faz uma varredura no nome dos clientes para decidir em qual posição colocar
-
-    // Insere no final por enquanto
+    // Insere no final da lista
     list->peopleData[list->quantity] = person;
     list->quantity++;
+
+    // Oraganiza a lista em ordem alfabética
+    personListToAlphabeticalOrder(list);
 
     return 1; // Retorna 1 (verdadeiro), indicando sucesso na adição
 }
@@ -146,12 +152,12 @@ int removePerson(_PERSON_LIST* list, unsigned long code){
 // Obtém o Index na lista passando código(id ou CPF/CNPJ)
 int getPersonIndex(_PERSON_LIST* list, unsigned long code){
     int i=-1;
-    
+
     // Faz verificações para saber se será possível encontrar pessoa
     // → Se: lista é nulo ou a lista está vazia ou o código é negativo ou maior que um CNPJ
     if(
         (list == NULL) ||
-        (list->quantity == 0) ||
+        (isEmpityPersonList(list)) ||
         (code < 0) ||
         (code > 99999999999999)
     ){
@@ -159,7 +165,7 @@ int getPersonIndex(_PERSON_LIST* list, unsigned long code){
     }
 
     // Verifica se o código é um ID ou CPF/CNPJ
-    if(code < 65536){ // Se menor que 65536 → id
+    if(code < ID_MAX_NUMBER){ // Se menor que ID_MAX_NUMBER → id
         // Percorre os índices procurando pelo ID
         while((code != list->peopleData[i].id) && (i < list->quantity)){
             i++;
@@ -213,7 +219,44 @@ int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person){
     // Atualiza as informações recebidas
     list->peopleData[personIndex] = person;
 
+    // Reorganiza a lista em ordem alfabética
+    personListToAlphabeticalOrder(list);
+
     return 1; // Retorna 1 (verdadeiro), indicando que foi atualizado com sucesso
+}
+
+// Organiza a lista em ordem alfabética
+void personListToAlphabeticalOrder(_PERSON_LIST* list){
+    _PERSON temporaryPerson;
+    int k=0;
+    int i=0;
+
+    // Percorre a lista de pessoas várias vezes
+    for(k=0; (k < list->quantity * list->quantity); k++){
+        /* Coloca a primeira letra do nome da pessoa em minúscula
+           → 1ª letra do nome recebe sua versão maiúscula */
+        list->peopleData[i].name[0] = toupper(list->peopleData[i].name[0]);
+        list->peopleData[i+1].name[0] = toupper(list->peopleData[i+1].name[0]);
+
+        /* Compara o valor entre dois nomes
+           → se (valor > 0) → não está em ordem alfabética 
+           → se (valor < 0) → está em ordem crescente/alfabética
+           → se (valor == 0) as duas palavras tem o mesmo valor */
+        if(strcmp(list->peopleData[i].name, list->peopleData[i+1].name) > 0){
+            // Troca posição de pessoa[i] por pessoa[i+1] e vice-versa, usando variável auxiliar temporaryPerson
+            temporaryPerson = list->peopleData[i];
+            list->peopleData[i] = list->peopleData[i+1];
+            list->peopleData[i+1] = temporaryPerson;
+        }
+            
+        // Passa para a próximo pessoa
+        i++;
+
+        // Se chegar na última posição, volta do início
+        if(i == list->quantity-1){
+            i = 0;
+        }
+    }
 }
 
 /* ************* ACCOUNT LIST FUNCTIONS ************ */

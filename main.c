@@ -2,7 +2,7 @@
 //Data início: 11/05/2021
 #include <stdio.h>
 #include <locale.h> // Localização, caracteres
-#include <string.h> // Trabalhar com strings
+#include <string.h> // Necessário para manipular strings (strcpy)
 #include "./lib/listaDeDados.h" // Biblioteca que gerencia os dados
 #define EXIT_SUCCESS 0
 #define EXIT_ERROR -1
@@ -65,38 +65,38 @@ int main(){
                         "Digite os dados do cliente. \n"
                         "Id: "
                     );
-                    // scanf("%hd", pessoa.id);
+                    scanf("%hd", &pessoaTemporaria.id);
                     printf("Nome: ");
-                    // scanf(" %s", pessoa.name);
+                    scanf(" %s", pessoaTemporaria.name);
                     printf("CPF/CNPJ: ");
-                    // scanf("%d", &pessoa.cpf_cnpj);
+                    scanf("%lu", &pessoaTemporaria.cpf_cnpj);
                     printf("Telefone: ");
-                    // scanf("%d", &pessoa.phoneNumber);
+                    // scanf("%d", &pessoaTemporaria.phoneNumber);
                     printf(
                         "Digite o endereço.\n"
                         "Estado: "
                     );
-                    // scanf(" %s", pessoa.address.state);
+                    // scanf(" %s", pessoaTemporaria.address.state);
                     printf("Cidade: ");
-                    // scanf(" %s", pessoa.address.city);
+                    // scanf(" %s", pessoaTemporaria.address.city);
                     printf("Bairro: ");
-                    // scanf(" %s", pessoa.address.bairro);
+                    // scanf(" %s", pessoaTemporaria.address.bairro);
                     printf("Rua: ");
-                    // scanf(" %s", pessoa.address.street);
+                    // scanf(" %s", pessoaTemporaria.address.street);
                     printf("Número: ");
-                    // scanf("%d", &pessoa.address.number);
+                    // scanf("%hd", &pessoaTemporaria.address.number);
                     printf("CEP: ");
-                    // scanf("%d", &pessoa.address.zipcode);
+                    // scanf("%d", &pessoaTemporaria.address.zipcode);
 
                     // Entradas para teste.
                     // Foram suprimidos os scanf para teste
-                    pessoaTemporaria.id = 336;
-                    strcpy(pessoaTemporaria.name, "Fulano");
-                    pessoaTemporaria.cpf_cnpj = 1345312345;
+                    //pessoaTemporaria.id = 336;
+                    //strcpy(pessoaTemporaria.name, "Fulano");
+                    //pessoaTemporaria.cpf_cnpj = 1345312345;
                     pessoaTemporaria.phoneNumber = 63747364;
                     strcpy(pessoaTemporaria.address.state, "DF");
                     strcpy(pessoaTemporaria.address.city, "Brasília");
-                    strcpy(pessoaTemporaria.address.bairro, "AsaNorte");
+                    strcpy(pessoaTemporaria.address.bairro, "Asa Norte");
                     strcpy(pessoaTemporaria.address.street, "Longe");
                     pessoaTemporaria.address.number = 333;
                     pessoaTemporaria.address.zipcode = 445345345;
@@ -132,7 +132,7 @@ int main(){
                         "Foram encontrados: %d cliente(s). \n",
                         clientes->quantity
                     );
-                    
+
                     // Verifica se existem clientes cadastados
                     if(isEmpityPersonList(clientes)){
                         printf(
@@ -148,30 +148,30 @@ int main(){
                             "-----------------------------------\n"
                             "Id: %d\n"
                             "Nome: %s\n"
-                            "CPF/CNPJ: %ld\n"
-                            "Telefone: %d\n"
-                            "Estado: %s\n"
-                            "Cidade: %s\n"
-                            "Bairro: %s\n"
-                            "Rua: %s\n"
-                            "Número: %d\n"
-                            "CEP: %d\n",
+                            "CPF/CNPJ: %ld\n",
+                            //"Telefone: %d\n"
+                            //"Estado: %s\n"
+                            //"Cidade: %s\n"
+                            //"Bairro: %s\n"
+                            //"Rua: %s\n"
+                            //"Número: %d\n"
+                            //"CEP: %d\n",
                             clientes->peopleData[personIndex].id,
                             clientes->peopleData[personIndex].name,
-                            clientes->peopleData[personIndex].cpf_cnpj,
-                            clientes->peopleData[personIndex].phoneNumber,
-                            clientes->peopleData[personIndex].address.state,
-                            clientes->peopleData[personIndex].address.city,
-                            clientes->peopleData[personIndex].address.bairro,
-                            clientes->peopleData[personIndex].address.street,
-                            clientes->peopleData[personIndex].address.number,
-                            clientes->peopleData[personIndex].address.zipcode
+                            clientes->peopleData[personIndex].cpf_cnpj
+                            //clientes->peopleData[personIndex].phoneNumber,
+                            //clientes->peopleData[personIndex].address.state,
+                            //clientes->peopleData[personIndex].address.city,
+                            //clientes->peopleData[personIndex].address.bairro,
+                            //clientes->peopleData[personIndex].address.street,
+                            //clientes->peopleData[personIndex].address.number,
+                            //clientes->peopleData[personIndex].address.zipcode
                         );
                     }
 
                     // Aguarda receber um caractere para continuar execução
                     printf("\nPressione 'q' para continuar...\n");
-                    while((getchar() == '\n'));
+                    //while((getchar() == '\n'));
 
                     printf("\033[H\033[2J\033[3J"); // Limpa a tela
                     break;
