@@ -4,12 +4,27 @@
 		{
 			"type": "cppbuild",
 			"label": "gcc build active file",
+			"command": "/usr/bin/make",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+            "presentation": {
+                "showReuseMessage": false,
+            },
+			"problemMatcher": [
+				"$gcc",
+			],
+			"detail": "Build with /usr/bin/gcc"
+		},
+		{
+			"type": "cppbuild",
+			"label": "gcc build for debugging",
 			"command": "/usr/bin/gcc",
 			"args": [
-				//"-g",
+				"-g",
 				"-std=c99",
-				//"-pedantic-errors",
-				//"-pedantic",
+				"-pedantic-errors",
 				"${file}", // Arquivo principal
 				"${workspaceFolder}/lib/listaDeDados.c",
 				"-o",

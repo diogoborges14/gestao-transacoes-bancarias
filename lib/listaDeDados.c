@@ -202,7 +202,54 @@ int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person){
 }
 
 // Consultar na lista passando nome
-int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person);
+int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person){
+    int personIndex=-1;
+    int commonChar=0; // quantidade de caracteres em comúm
+    int commonCharRecord=0; // maior recorde de caracteres em comúm
+    int i, k;
+
+    // Percorre todas as pessoas da lista verificando se os nomes são iguais 
+    while((strcmp(name, list->peopleData[personIndex].name) != 0) && (personIndex < list->quantity)){
+        personIndex++;
+    }
+
+    /* Verifica se o nome foi encontrado. 
+       Se "personIndex" chegou em "list->quantity", indica que procurou em todas a posições e nõo encontrou.
+    */
+    if(personIndex == list->quantity){
+        /* Tenta achar o nome que temanha maior quantidade de caracteres em comúm */
+        
+        // Percorre todas as pessoas da lista
+        for (k = 0; k < list->quantity; k++){
+            // Percorre todos os caracteres do nome da pessoa na lista ou name recebido na função. O que chegar primeiro
+            for(i=0; (i < MAX_NAME && i < strlen(name)); i++){
+                // Verifica se os caracteres são iguais (usando a versão em minúsuclo dos caracteres)
+                if(tolower(list->peopleData[k].name[i]) == tolower(name[i])){
+                    commonChar += 1;
+                }
+            }
+
+            /* Verifica se nome da pessoa em peopleData[k].name tem
+               mais caracteres em comúm que o nome da pessoa anterior.
+               Ou se for a primeira excução, a pessoa que tem a maior correpondência se torna peopleData[0]*/
+            if(commonChar > commonCharRecord || k == 0){
+                personIndex = k;
+                commonCharRecord = commonChar;
+            }
+            // Reseta a quantidade de caracteres em comúm
+            commonChar = 0;
+        }
+
+        // Armazena a pessoa encontrada no ponteiro recebido na função
+        *person = list->peopleData[personIndex];
+        return -1; // Retorna -1, indicando nome não encontrado. Porém, existe uma possível correpondência
+    }else{
+        // Siginifica que encontrou a pessoa.
+        // Armazena a pessoa encontrada no ponteiro recebido na função
+        *person = list->peopleData[personIndex];
+        return 1; // Retorna 1 (verdadeiro)
+    }
+}
 
 // Atualiza informações passando código(id ou CPF/CNPJ)
 int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person){

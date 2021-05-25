@@ -9,16 +9,13 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": [
-                "<",
-                "test"
-            ],
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "gcc build active file"
+            "preLaunchTask": "gcc build for debugging"
         }
     ]
 }

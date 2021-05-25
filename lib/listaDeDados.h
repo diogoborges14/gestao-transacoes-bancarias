@@ -26,7 +26,7 @@ typedef struct endereco{
     char city[MAX_ADRESS];
     char bairro[MAX_ADRESS];
     char street[MAX_ADRESS];
-    unsigned short int number;
+    unsigned short number;
     unsigned int zipcode;
 }_ADDRESS;
 
@@ -34,7 +34,7 @@ typedef struct endereco{
 typedef struct pessoa{
     unsigned short id;
     char name[MAX_NAME];
-    long int cpf_cnpj;
+    unsigned long cpf_cnpj;
     unsigned int phoneNumber;
     _ADDRESS address;
 }_PERSON;

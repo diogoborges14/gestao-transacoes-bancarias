@@ -7,9 +7,15 @@
 #define EXIT_SUCCESS 0
 #define EXIT_ERROR -1
 
+// Limpa o aqruivo stdin
+void clearStdinBuffer(){
+    while(getchar() != '\n');
+}
+
 // Var declaration section
 _PERSON_LIST *clientes;
 _PERSON pessoaTemporaria;
+char nomeTemporario[MAX_ADRESS];
 unsigned long codigoParaConsultar;
 unsigned int vezesExecutado = 0;
 short int codigoErro;
@@ -63,30 +69,58 @@ int main(){
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "C – Cadastrar um cliente \n\n"
                         "Digite os dados do cliente. \n"
-                        "Id: "
                     );
-                    scanf("%hd", &pessoaTemporaria.id);
+                    while(1){
+                        printf("Id: ");
+                        scanf("%hu", &pessoaTemporaria.id);
+                        clearStdinBuffer();
+
+                        // Verifica se o ID é um número válido
+                        if(pessoaTemporaria.id <= 0 || pessoaTemporaria.id >= 65535){
+                            printf("Id inválido.\n");
+                        }else{
+                            break; // Encerra o loop
+                        }
+                    }
                     printf("Nome: ");
-                    scanf(" %s", pessoaTemporaria.name);
-                    printf("CPF/CNPJ: ");
-                    scanf("%lu", &pessoaTemporaria.cpf_cnpj);
+                    scanf(" %[^\n]", pessoaTemporaria.name);
+                    clearStdinBuffer();
+                    while(1){
+                        printf("CPF/CNPJ: ");
+                        scanf("%lu", &pessoaTemporaria.cpf_cnpj);
+                        clearStdinBuffer();
+
+                        // Verifica se o CPF/CNPJ é válido
+                        if(pessoaTemporaria.cpf_cnpj <= 65536 || pessoaTemporaria.cpf_cnpj > 99999999999999){
+                            printf("CPF/CNPJ inválido. \n");
+                        }else{
+                            break; // Encerra o loop
+                        }
+                    }
                     printf("Telefone: ");
-                    // scanf("%d", &pessoaTemporaria.phoneNumber);
+                    scanf("%u", &pessoaTemporaria.phoneNumber);
+                    clearStdinBuffer();
                     printf(
                         "Digite o endereço.\n"
                         "Estado: "
                     );
-                    // scanf(" %s", pessoaTemporaria.address.state);
+                    scanf(" %[^\n]", pessoaTemporaria.address.state);
+                    clearStdinBuffer();
                     printf("Cidade: ");
-                    // scanf(" %s", pessoaTemporaria.address.city);
+                    scanf(" %[^\n]", pessoaTemporaria.address.city);
+                    clearStdinBuffer();
                     printf("Bairro: ");
-                    // scanf(" %s", pessoaTemporaria.address.bairro);
+                    scanf(" %[^\n]", pessoaTemporaria.address.bairro);
+                    clearStdinBuffer();
                     printf("Rua: ");
-                    // scanf(" %s", pessoaTemporaria.address.street);
+                    scanf(" %[^\n]", pessoaTemporaria.address.street);
+                    clearStdinBuffer();
                     printf("Número: ");
-                    // scanf("%hd", &pessoaTemporaria.address.number);
+                    scanf("%hu", &pessoaTemporaria.address.number);
+                    clearStdinBuffer();
                     printf("CEP: ");
-                    // scanf("%d", &pessoaTemporaria.address.zipcode);
+                    scanf("%u", &pessoaTemporaria.address.zipcode);
+                    clearStdinBuffer();
 
                     // Entradas para teste.
                     // Foram suprimidos os scanf para teste
@@ -146,16 +180,16 @@ int main(){
                     for(personIndex = 0; personIndex < clientes->quantity; personIndex++){
                         printf(
                             "-----------------------------------\n"
-                            "Id: %d\n"
+                            "Id: %hu\n"
                             "Nome: %s\n"
-                            "CPF/CNPJ: %ld\n",
-                            //"Telefone: %d\n"
+                            "CPF/CNPJ: %lu\n",
+                            //"Telefone: %u\n"
                             //"Estado: %s\n"
                             //"Cidade: %s\n"
                             //"Bairro: %s\n"
                             //"Rua: %s\n"
-                            //"Número: %d\n"
-                            //"CEP: %d\n",
+                            //"Número: %hu\n"
+                            //"CEP: %u\n",
                             clientes->peopleData[personIndex].id,
                             clientes->peopleData[personIndex].name,
                             clientes->peopleData[personIndex].cpf_cnpj
@@ -171,7 +205,7 @@ int main(){
 
                     // Aguarda receber um caractere para continuar execução
                     printf("\nPressione 'q' para continuar...\n");
-                    //while((getchar() == '\n'));
+                    while((getchar() == '\n'));
 
                     printf("\033[H\033[2J\033[3J"); // Limpa a tela
                     break;
@@ -180,27 +214,56 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "B – Buscar cliente cadastrado \n\n"
-                        "Digite o Id ou CPF/CNPJ: "
+                        "Procurar usando: \n"
+                        "N → nome. \n"
+                        "C → CPF/CNPJ ou id. \n"
                     );
-                    scanf("%lu", &codigoParaConsultar);
 
-                    // Obtém o cliente e armazena em pessoaTemporaria. Armazena possíveis erros em "codigoErro"
-                    codigoErro = getPerson(clientes, codigoParaConsultar, &pessoaTemporaria); // (lista, código do cliente, ponteiro para armazenar o cliente)
+                    while(1){
+                        printf("(N/C): ");
+                        scanf(" %c", &opcaoEscolhida);
+                        clearStdinBuffer();
+                        if(
+                            (opcaoEscolhida == 'N') ||
+                            (opcaoEscolhida == 'n') ||
+                            (opcaoEscolhida == 'C') ||
+                            (opcaoEscolhida == 'c')
+                        ){
+                            break; // Encerra o loop
+                        }
+                    };
 
-                    if(codigoErro){
+                    if ((opcaoEscolhida == 'N')|| (opcaoEscolhida == 'n')){
+                        printf("Digite o nome: ");
+                        scanf(" %[^\n]", nomeTemporario);
+                        clearStdinBuffer();
+
+                        // Obtém o cliente e armazena em pessoaTemporaria. Armazena possíveis erros em "codigoErro"
+                        codigoErro = getPersonByName(clientes, nomeTemporario, &pessoaTemporaria); // (lista, nome do cliente, ponteiro para armazenar o cliente)
+                    }else{
+                        printf("Digite o Id ou CPF/CNPJ: ");
+                        scanf("%lu", &codigoParaConsultar);
+
+                        // Obtém o cliente e armazena em pessoaTemporaria. Armazena possíveis erros em "codigoErro"
+                        codigoErro = getPerson(clientes, codigoParaConsultar, &pessoaTemporaria); // (lista, código do cliente, ponteiro para armazenar o cliente)
+                    } 
+
+                    if(codigoErro == 1){
                         // Mostrando pessoa encontrada
                         printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Pessoa encontrada: \n"
                             "-----------------------------------\n"
-                            "Id: %d\n"
+                            "Id: %hu\n"
                             "Nome: %s\n"
-                            "CPF/CNPJ: %ld\n"
-                            "Telefone: %d\n"
+                            "CPF/CNPJ: %lu\n"
+                            "Telefone: %u\n"
                             "Estado: %s\n"
                             "Cidade: %s\n"
                             "Bairro: %s\n"
                             "Rua: %s\n"
-                            "Número: %d\n"
-                            "CEP: %d\n",
+                            "Número: %hu\n"
+                            "CEP: %u\n",
                             pessoaTemporaria.id,
                             pessoaTemporaria.name,
                             pessoaTemporaria.cpf_cnpj,
@@ -216,7 +279,40 @@ int main(){
                         printf("\nPressione 'q' para continuar...\n");
                         while((getchar() == '\n'));
                         printf("\033[H\033[2J\033[3J"); // Limpa a tela
-                    }else{
+                    }
+                    else if(codigoErro == -1){
+                        // Mostrando nome com maior quantidade de caracteres em comúm
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Possível correpondência: \n"
+                            "-----------------------------------\n"
+                            "Id: %hu\n"
+                            "Nome: %s\n"
+                            "CPF/CNPJ: %lu\n"
+                            "Telefone: %u\n"
+                            "Estado: %s\n"
+                            "Cidade: %s\n"
+                            "Bairro: %s\n"
+                            "Rua: %s\n"
+                            "Número: %hu\n"
+                            "CEP: %u\n",
+                            pessoaTemporaria.id,
+                            pessoaTemporaria.name,
+                            pessoaTemporaria.cpf_cnpj,
+                            pessoaTemporaria.phoneNumber,
+                            pessoaTemporaria.address.state,
+                            pessoaTemporaria.address.city,
+                            pessoaTemporaria.address.bairro,
+                            pessoaTemporaria.address.street,
+                            pessoaTemporaria.address.number,
+                            pessoaTemporaria.address.zipcode
+                        );
+                        // Aguarda receber um caractere para continuar execução
+                        printf("\nPressione 'q' para continuar...\n");
+                        while((getchar() == '\n'));
+                        printf("\033[H\033[2J\033[3J"); // Limpa a tela    
+                    }
+                    else{
                         printf(
                             "\033[H\033[2J\033[3J" // Limpa a tela
                             "Não foi possível encontrar a pessoa. \n"
@@ -242,16 +338,16 @@ int main(){
                             "\033[H\033[2J\033[3J" // Limpa a tela
                             "Cliente encontrado: \n"
                             "-----------------------------------\n"
-                            "Id: %d\n"
+                            "Id: %hu\n"
                             "Nome: %s\n"
-                            "CPF/CNPJ: %ld\n"
-                            "Telefone: %d\n"
+                            "CPF/CNPJ: %lu\n"
+                            "Telefone: %u\n"
                             "Estado: %s\n"
                             "Cidade: %s\n"
                             "Bairro: %s\n"
                             "Rua: %s\n"
-                            "Número: %d\n"
-                            "CEP: %d\n",
+                            "Número: %hu\n"
+                            "CEP: %u\n",
                             pessoaTemporaria.id,
                             pessoaTemporaria.name,
                             pessoaTemporaria.cpf_cnpj,
@@ -267,30 +363,34 @@ int main(){
                         printf(
                             "-----------------------------------\n"
                             "Digite os novos dados do cliente.\n"
-                            "Nome: "
                         );
-                        // Limpa buffer stdin
-                        while(getchar() != '\n');
-                        fgets(pessoaTemporaria.name, MAX_NAME, stdin);
-                        // Limpa buffer stdin
-                        while(getchar() != '\n');
+                        printf("Nome: ");
+                        scanf(" %[^\n]", pessoaTemporaria.name);
+                        clearStdinBuffer();
                         printf("Telefone: ");
-                        scanf("%d", &pessoaTemporaria.phoneNumber);
+                        scanf("%u", &pessoaTemporaria.phoneNumber);
+                        clearStdinBuffer();
                         printf(
                             "Digite o endereço.\n"
                             "Estado: "
                         );
-                        scanf(" %s", pessoaTemporaria.address.state);
+                        scanf(" %[^\n]", pessoaTemporaria.address.state);
+                        clearStdinBuffer();
                         printf("Cidade: ");
-                        scanf(" %s", pessoaTemporaria.address.city);
+                        scanf(" %[^\n]", pessoaTemporaria.address.city);
+                        clearStdinBuffer();
                         printf("Bairro: ");
-                        scanf(" %s", pessoaTemporaria.address.bairro);
+                        scanf(" %[^\n]", pessoaTemporaria.address.bairro);
+                        clearStdinBuffer();
                         printf("Rua: ");
-                        scanf(" %s", pessoaTemporaria.address.street);
+                        scanf(" %[^\n]", pessoaTemporaria.address.street);
+                        clearStdinBuffer();
                         printf("Número: ");
                         scanf("%hu", &pessoaTemporaria.address.number);
+                        clearStdinBuffer();
                         printf("CEP: ");
-                        scanf("%d", &pessoaTemporaria.address.zipcode);
+                        scanf("%u", &pessoaTemporaria.address.zipcode);
+                        clearStdinBuffer();
 
                         // Atualiza dados do cliente e armazena possíveis erros em "codigoErro"
                         codigoErro = updatePerson(clientes, codigoParaConsultar, pessoaTemporaria); // (lista, codigo do cliente, cliente)
@@ -330,16 +430,16 @@ int main(){
                         // Mostrando pessoa encontrada
                         printf(
                             "-----------------------------------\n"
-                            "Id: %d\n"
+                            "Id: %hu\n"
                             "Nome: %s\n"
-                            "CPF/CNPJ: %ld\n"
-                            "Telefone: %d\n"
+                            "CPF/CNPJ: %lu\n"
+                            "Telefone: %u\n"
                             "Estado: %s\n"
                             "Cidade: %s\n"
                             "Bairro: %s\n"
                             "Rua: %s\n"
-                            "Número: %d\n"
-                            "CEP: %d\n",
+                            "Número: %hu\n"
+                            "CEP: %u\n",
                             pessoaTemporaria.id,
                             pessoaTemporaria.name,
                             pessoaTemporaria.cpf_cnpj,
@@ -388,12 +488,14 @@ int main(){
                     break;
                 case 'V':
                 case 'v':
+                    // V - Voltar ao menu anterior
                     printf("\033[H\033[2J\033[3J"); // Limpa a tela
                     main(); // Volta ao menú anterior
                     return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
                     break;
                 case 'S':
                 case 's':
+                    // S – Sair
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "Saindo... \n"
@@ -497,12 +599,14 @@ int main(){
                     break;
                 case 'V':
                 case 'v':
+                    // V - Voltar ao menu anterior
                     printf("\033[H\033[2J\033[3J"); // Limpa a tela
                     main(); // Volta ao menú anterior
                     return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
                     break;
                 case 'S':
                 case 's':
+                    // S – Sair
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "Saindo... \n"
@@ -529,6 +633,7 @@ int main(){
             break;
         case 'S':
         case 's':
+            // S – Sair
             printf(
                 "\033[H\033[2J\033[3J" // Limpa a tela
                 "Saindo... \n"
