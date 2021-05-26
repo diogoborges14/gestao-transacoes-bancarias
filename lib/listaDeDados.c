@@ -73,7 +73,7 @@ int closePersonList(_PERSON_LIST* list){
 }
 
 // Verifica o tamanho da lista
-int lenthPersonList(_PERSON_LIST* list){
+int lengthPersonList(_PERSON_LIST* list){
     if(list == NULL){
         return -1; // Se a lista é nula, retorna erro -1
     }else{
@@ -151,7 +151,7 @@ int removePerson(_PERSON_LIST* list, unsigned long code){
 
 // Obtém o Index na lista passando código(id ou CPF/CNPJ)
 int getPersonIndex(_PERSON_LIST* list, unsigned long code){
-    int i=-1;
+    int personIndex=-1;
 
     // Faz verificações para saber se será possível encontrar pessoa
     // → Se: lista é nulo ou a lista está vazia ou o código é negativo ou maior que um CNPJ
@@ -167,22 +167,22 @@ int getPersonIndex(_PERSON_LIST* list, unsigned long code){
     // Verifica se o código é um ID ou CPF/CNPJ
     if(code < ID_MAX_NUMBER){ // Se menor que ID_MAX_NUMBER → id
         // Percorre os índices procurando pelo ID
-        while((code != list->peopleData[i].id) && (i < list->quantity)){
-            i++;
+        while((code != list->peopleData[personIndex].id) && (personIndex < list->quantity)){
+            personIndex++;
         }
     }else{ // Senão → CPF/CNPJ
         // Percorre os índices procurando pelo CPF/CNPJ
-        while ((code != list->peopleData[i].cpf_cnpj) && (i < list->quantity)){
-            i++;
+        while ((code != list->peopleData[personIndex].cpf_cnpj) && (personIndex < list->quantity)){
+            personIndex++;
         }
     }
 
     // Verifica se o valor foi encontrado
-    if(i == list->quantity){ // Se chegar na posição vazia, indica que procurou em todas a posições e nõo encontrou
+    if(personIndex == list->quantity){ // Se chegar na posição vazia, indica que procurou em todas as posições e nõo encontrou
         return -2; // Retorna erro -2, indicando que não foi possível encontrar a pessoa
     }else{
         // Retorna a posição da pessoa na lista
-        return i;
+        return personIndex;
     }
 }
 
@@ -214,7 +214,7 @@ int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person){
     }
 
     /* Verifica se o nome foi encontrado. 
-       Se "personIndex" chegou em "list->quantity", indica que procurou em todas a posições e nõo encontrou.
+       Se "personIndex" chegou em "list->quantity", indica que procurou em todas as posições e nõo encontrou.
     */
     if(personIndex == list->quantity){
         /* Tenta achar o nome que temanha maior quantidade de caracteres em comúm */
@@ -307,5 +307,237 @@ void personListToAlphabeticalOrder(_PERSON_LIST* list){
 }
 
 /* ************* ACCOUNT LIST FUNCTIONS ************ */
+
+// Função que cria a lista de contas bancárias e carrega contas salvos em arquivo
+_ACCOUNT_LIST* newAccountList(){
+    FILE *arquivoComClientes = fopen(accountDB, "rb"); // Abre arquivo no modo leitura em binário
+    short int codigoErro=0;
+    _ACCOUNT_LIST *list; // Cria ponteiro para uma lista
+
+    // Aloca espaço para uma lista de contas bancárias do tipo (_ACCOUNT_LIST*)
+    list = (_ACCOUNT_LIST*) malloc(sizeof(_ACCOUNT_LIST));
+
+    // Se deu certo
+    if(list != NULL){
+        list->quantity = 0; // Atribuí 0 para quantidade da lista
+    }
+
+    // Verifica se existe um arquivo com clientes.
+    if(arquivoComClientes != NULL){
+        // Lê os dados dos clientes do arquivo
+        //          (ponteiro para variável, tamanho, n items, arquivo)
+        codigoErro = fread(list, sizeof(_ACCOUNT_LIST), 1, arquivoComClientes);
+        fclose(arquivoComClientes);
+
+        // Verifica se ocorreu erro ao ler o arquivo
+        if(codigoErro == 1){
+            printf("Contas bancárias carregadas com sucesso. \n");
+        }else{
+            printf("Erro ao carregar contas bancárias. Cod.: %d\n", codigoErro);
+        }
+    }
+
+    // Retorna a lista criada
+    return list;
+}
+
+// Função que grava contas bancárias em arquivo e limpa a lista da memória
+int closeAccountList(_ACCOUNT_LIST* list){
+    FILE *arquivoComContasBancarias = fopen(accountDB, "wb"); // Abre arquivo no modo escrita em binário
+    short int codigoErro=0;
+
+    // Guarda os dados das contas bancárias no arquivo
+    //           (ponteiro para variável, tamanho, n items, arquivo)
+    codigoErro = fwrite(list, sizeof(_ACCOUNT_LIST), 1, arquivoComContasBancarias);
+    fclose(arquivoComContasBancarias);
+
+    // Verifica se ocorreu erro ou se a lista é nula
+    if(codigoErro != 1 || list == NULL){
+        return 0; // Retorna 0 (falso), indicando que não foi possível gravar o arquivo
+    }
+
+    // Libera a lista da memória
+    free(list);
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso ao gravar lista e liberar lista da memória
+}
+
+// Verifica o tamanho da lista
+int lengthAccountList(_ACCOUNT_LIST* list){
+    // Verifica se a lista existe
+    if(list == NULL){
+        return -1; // Se a lista é nula, retorna erro -1
+    }else{
+        return list->quantity; // Retorna tamanho da lista
+    }
+}
+
+// Verifica se a lista está cheia
+int isFullAccountList(_ACCOUNT_LIST* list){
+    // Verifica se a lista existe
+    if(list == NULL){
+        return -1; // Se a lista é nula, retorna erro -1
+    }else{
+        // Se a quantidade de itens é o máximo permitido
+        return (list->quantity == MAX_ACCOUNT); // Retorna 1 para verdadeiro ou 0 para falso
+    }
+}
+
+// Verifica se a lista está vazia
+int isEmpityAccountList(_ACCOUNT_LIST* list){
+    // Verifica se a lista existe
+    if(list == NULL){
+        return -1; // Se a lista é nula, retorna erro -1
+    }else{
+        // Se a quantidade de itens é zero
+        return (list->quantity == 0); // Retorna 1 para verdadeiro ou 0 para falso
+    }
+}
+
+// Insere na lista
+int addAccount(_ACCOUNT_LIST* list, _ACCOUNT account){
+    // Verifica se a lista existe e se está cheia
+    if((list == NULL) || isFullAccountList(list)){
+        return 0; // Retorna 0 (falso), indicando que não foi possível adicionar na lista
+    }
+
+    // Verifica se o número da conta e agência já estão cadastrados. Valores positivos indicam que foi encontrado
+    if(getAccountIndex(list, account.agencyNumber, account.accountNumber) >= 0){
+        return -1; // Retorna erro -1, indicando que a conta e agência já estão cadastradas
+    }
+
+    // Atribuí saldo 0 para conta
+    account.balance = 0;
+    // Insere no final da lista
+    list->accountsData[list->quantity] = account;
+    list->quantity++;
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso na adição
+}
+
+// Remove da lista de qualquer posição passando número agência e conta
+int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber){
+    int i, accountIndex=-1;
+
+    // Obtém o índice onde a conta está alocada
+    accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(accountIndex >= 0){
+        // Move os itens para esquerda ← sobrescevendo o primeiro item
+        for (i = accountIndex; i < list->quantity; i++){
+            /*                 próximo elemento inserido
+            se torna o elemento anterior               */
+            list->accountsData[i] = list->accountsData[i+1];
+        }
+
+        // Apaga a última conta adicionado indicando que a última posição está vaga
+        list->quantity--;
+        return 1; // Retorna 1 (verdadeiro), indicando que foi excluído com sucesso
+    }else{
+        return 0; // Retorna 0 (falso), indicando que não foi possível encontrar a conta
+    }
+}
+
+// Remove todas as contas associadas a um CPF/CNPJ. (é acionado quando um cliente é excuído)
+void removeAccountAll(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+    int accountIndex = -1;
+
+    // Enquanto encontrar alguma conta
+    while(getAccountIndexByCode(list, cpf_cnpj) >= 0){
+
+        // Move os itens para esquerda ← sobrescevendo
+        for(accountIndex = getAccountIndexByCode(list, cpf_cnpj); accountIndex < list->quantity; accountIndex++){
+            /*                   próximo elemento inserido
+            se torna o elemento anterior                 */
+            list->accountsData[accountIndex] = list->accountsData[accountIndex+1];
+        }
+
+        // Apaga a última conta adicionado indicando que a última posição está vaga
+        list->quantity--;
+    }
+}
+
+// Obtém o Index onde a primeira conta que contém o CPF/CNPJ está alocada
+int getAccountIndexByCode(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+    int accountIndex = -1;
+
+    // Faz verificações para saber se será possível encontrar conta
+    // → Se: lista é nulo ou a lista está vazia ou o CPF/CNPJ < ID ou maior que um CNPJ
+    if(
+        (list == NULL) ||
+        (isEmpityAccountList(list)) ||
+        (cpf_cnpj < ID_MAX_NUMBER) ||
+        (cpf_cnpj > 99999999999999)
+    ){
+        return -1; // Retorna erro -1, indicando que não foi possível encontrar a conta com este id ou CPF/CNPJ
+    }
+
+    // Percorre os índices procurando pelo CPF/CNPJ
+    while ((cpf_cnpj != list->accountsData[accountIndex].cpf_cnpj) && (accountIndex < list->quantity)){
+        accountIndex++;
+    }
+
+    // Verifica se o valor foi encontrado
+    if(accountIndex == list->quantity){ // Se chegar na posição vazia, indica que procurou em todas as posições e nõo encontrou
+        return -2; // Retorna erro -2, indicando que não foi possível encontrar a conta
+    }else{
+        // Retorna a posição da conta na lista
+        return accountIndex;
+    }
+}
+
+// Obtém o Index na lista passando número da agência e conta
+int getAccountIndex(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber){
+    int accountIndex = -1;
+
+    // Faz verificações para saber se será possível encontrar conta
+    // → Se: lista é nulo ou a lista está vazia ou a agencia ou conta são números negativos
+    if(
+        (list == NULL) ||
+        (isEmpityAccountList(list)) ||
+        (agencyNumber < 0) ||
+        (accountNumber < 0)
+    ){
+        return -1; // Retorna erro -1, indicando que não foi possível encontrar a conta com agência
+    }
+
+    /* Percorre os índices procurando pelo núero da agência e conta.
+       → Enquanto agência ou conta não forem encontradas, continue incrementando
+       → Enquanto accountIndex não chegou no final da lista continue incrementando
+    */
+    while(
+        (
+            agencyNumber != list->accountsData[accountIndex].agencyNumber ||
+            accountNumber != list->accountsData[accountIndex].accountNumber
+        ) &&
+        accountIndex < list->quantity
+    ){
+        accountIndex++;
+    }
+
+    // Verifica se o valor foi encontrado
+    if(accountIndex == list->quantity){ // Se chegar na posição vazia, indica que procurou em todas as posições e nõo encontrou
+        return -2; // Retorna erro -2, indicando que não foi possível encontrar a conta e agnencia
+    }else{
+        // Retorna a posição da conta e agência
+        return accountIndex;
+    }
+}
+
+// Consultar na lista passando código(id ou CPF/CNPJ)
+int getAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, _ACCOUNT *account){
+    // Obtém o índice onde a conta está alocada
+    int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(accountIndex >= 0){
+        // Armazena a conta encontrada no ponteiro recebido na função
+        *account = list->accountsData[accountIndex];
+        return 1; // Retorna 1 (verdadeiro)
+    }else{
+        return 0; // Retorna 0 (falso), indicando que não foi possível encontrar a conta
+    }
+}
 
 /* ************ STATMENT LIST FUNCTIONS ************ */

@@ -47,9 +47,10 @@ typedef struct extrato{
 
 // Define estrutura para conta do tipo _ACCOUNT
 typedef struct conta{
-    unsigned int personId; // Id do client
-    unsigned int agency; // Número da agência bancária
-    unsigned int account; // Número da conta
+    unsigned short personId; // Id do cliente
+    unsigned long cpf_cnpj; // CPF/CNPJ do cliente
+    unsigned int agencyNumber; // Número da agência bancária
+    unsigned int accountNumber; // Número da conta
     unsigned int balance; // Saldo da conta
     _STATMENT statment; // Extrato da conta bancária
 }_ACCOUNT;
@@ -57,7 +58,7 @@ typedef struct conta{
 // Define a estrutura que armazenará as contas bancárias
 typedef struct listaContas{
     int quantity;
-    _ACCOUNT accountData[MAX_ACCOUNT]; // Criar vetor accountData do tipo _ACCOUNT
+    _ACCOUNT accountsData[MAX_ACCOUNT]; // Criar vetor accountData do tipo _ACCOUNT
 }_ACCOUNT_LIST;
 
 // Define a estrutura que armazenará extrato bancário
@@ -81,7 +82,7 @@ _PERSON_LIST* newPesonList();
 int closePersonList(_PERSON_LIST* list);
 
 // Verifica o tamanho da lista
-int lenthPersonList(_PERSON_LIST* list);
+int lengthPersonList(_PERSON_LIST* list);
 
 // Verifica se a lista está cheia
 int isFullPersonList(_PERSON_LIST* list);
@@ -111,6 +112,39 @@ int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person);
 void personListToAlphabeticalOrder(_PERSON_LIST* list);
 
 /* ************* ACCOUNT LIST FUNCTIONS ************ */
+
+// Função que cria a lista de contas bancárias e carrega contas salvos em arquivo
+_ACCOUNT_LIST* newAccountList();
+
+// Função que grava contas bancárias em arquivo e limpa a lista da memória
+int closeAccountList(_ACCOUNT_LIST* list);
+
+// Verifica o tamanho da lista
+int lengthAccountList(_ACCOUNT_LIST* list);
+
+// Verifica se a lista está cheia
+int isFullAccountList(_ACCOUNT_LIST* list);
+
+// Verifica se a lista está vazia
+int isEmpityAccountList(_ACCOUNT_LIST* list);
+
+// Insere na lista
+int addAccount(_ACCOUNT_LIST* list, _ACCOUNT account);
+
+// Remove da lista de qualquer posição passando número agência e conta
+int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber);
+
+// Remove todas as contas associadas a um CPF/CNPJ
+void removeAccountAll(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+
+// Obtém o Index na lista passando número da agência e conta
+int getAccountIndex(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber);
+
+// Obtém o Index onde a primeira conta que contém o CPF/CNPJ está alocada
+int getAccountIndexByCode(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+
+// Consultar na lista passando número da agência e conta
+int getAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, _ACCOUNT *account);
 
 /* ************ STATMENT LIST FUNCTIONS ************ */
 
