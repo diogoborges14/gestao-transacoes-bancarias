@@ -8,6 +8,8 @@
 #include <stdio.h> // Necessário para manipular arquivos (fopen, fclose, fwrite, fread)
 #include <string.h> // Necessário para manipular strings (strcmp)
 #include <ctype.h> // Necessário para trocar caracteres maísculos e minúsculos(toupper)
+#include <math.h> // Necessário para arredondar valor (round)
+#include <time.h> // Necessário para obter a data e hora atual
 #include "listaDeDados.h"
 
 /* **************** Library settings *************** */
@@ -440,7 +442,7 @@ int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int a
 }
 
 // Remove todas as contas associadas a um CPF/CNPJ. (é acionado quando um cliente é excuído)
-void removeAccountAll(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+void removeAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
     int accountIndex = -1;
 
     // Enquanto encontrar alguma conta
@@ -540,4 +542,256 @@ int getAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int acco
     }
 }
 
+// Otem a quantidade de contas bancárias associadas a um CPF/CNPJ
+int getAmountOfAccounts(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+    int accountsQuantity = 0;
+
+    // Verifica se a lista existe
+    if(list == NULL){
+        return 0; // Retorna 0 (falso), indicando que não foi possível encontrar contas
+    }
+
+    // Percorre toda a lista de contas bancárias
+    for(int accountIndex = 0; accountIndex < MAX_ACCOUNT; accountIndex++){
+        // Se encontrar alguma conta, contablizar
+        if(list->accountsData[accountIndex].cpf_cnpj == cpf_cnpj){
+            accountsQuantity++;
+        }
+    }
+
+    return accountsQuantity;
+}
+
+// Obtém todos as contas associadas a um CPF/CNPJ e armazena numa string
+int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+    int accountIndex;
+
+    // Verifica se a lista existe
+    if(list == NULL){
+        return 0; // Retorna 0 (falso), indicando que não foi possível encontrar contas
+    }
+
+    // Percorre toda a lista de contas bancárias
+    for(accountIndex = 0; accountIndex < list->quantity; accountIndex++){
+        // Se achar a cota de um cliente, cliente, mostrar
+        if(list->accountsData[accountIndex].cpf_cnpj == cpf_cnpj){
+            printf(
+                "-----------------------------------\n"
+                "Agência: %u\n"
+                "Conta: %u\n"
+                "Saldo: R$%u\n",
+                list->accountsData[accountIndex].agencyNumber,
+                list->accountsData[accountIndex].accountNumber,
+                (list->accountsData[accountIndex].balance / 100.0)
+            );
+        }
+    }
+
+    return 1; // Retorna 1 (verdadeiro), indicando que foram encontradas
+}
 /* ************ STATMENT LIST FUNCTIONS ************ */
+
+// Depósito bancária passando número da agência, conta, descrição, valor monetário
+int bankDeposit(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int accountNumber, char *description, float cash){
+    unsigned int cashOnInteger;
+    int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+    char descriptionFormated[MAX_STATMENT_CHAR];
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(accountIndex < 0){
+        return 0; // Retorna 0 (falso), indicando que não foi possível realizar o depósito
+    }
+
+    // Transforma o valor em inteiro, arredondando com 2 casas decimais
+    cashOnInteger = round(cash * 100);
+
+    // Adiciona o valor à conta
+    list->accountsData[accountIndex].balance += cashOnInteger;
+    
+    // Obtem a hora atual
+    struct tm *dateAndTime;
+    time_t seconds; // variável do tipo time_t para armazenar o tempo em segundos
+    time(&seconds);// obtendo o tempo em segundos
+    dateAndTime = localtime(&seconds);// para converter de segundos para o tempo local utilizamos a função localtime
+
+    // Adiciona detalhes na descrição
+    sprintf(
+        descriptionFormated,
+        "R$%.2f - %s - CREDITO - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        (cashOnInteger / 100.0),
+        description,
+        dateAndTime->tm_mday,
+        dateAndTime->tm_mon,
+        dateAndTime->tm_year+1900,
+        dateAndTime->tm_hour,
+        dateAndTime->tm_min,
+        dateAndTime->tm_sec
+    );
+
+    // Adicona a descrição da transação
+    strcpy(
+        list->accountsData[accountIndex].statmentData.statment[
+            list->accountsData[accountIndex].statmentData.quantity
+        ],
+        descriptionFormated
+    );
+    list->accountsData[accountIndex].statmentData.quantity++; // Incrementa
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso no depósito
+}
+
+// Saque passando número da agência, conta, valor monetário
+int bankDraft(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int accountNumber, char *description, float cash){
+    unsigned int cashOnInteger;
+    int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+    char descriptionFormated[MAX_STATMENT_CHAR];
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(accountIndex < 0){
+        return 0; // Retorna 0 (falso), indicando que não foi possível realizar o saque
+    }
+
+    // Transforma o valor em inteiro, arredondando com 2 casas decimais
+    cashOnInteger = round(cash * 100);
+
+    // Verifica se existe saldo suficiente para o saque
+    if(list->accountsData[accountIndex].balance < cashOnInteger){
+        return -1; // Retorna erro -1, indicando que não há saldo suficiente
+    }
+
+    // Faz o saque
+    list->accountsData[accountIndex].balance -= cashOnInteger;
+
+    // Obtem a hora atual
+    struct tm *dateAndTime;
+    time_t seconds; // variável do tipo time_t para armazenar o tempo em segundos
+    time(&seconds);// obtendo o tempo em segundos
+    dateAndTime = localtime(&seconds);// para converter de segundos para o tempo local utilizamos a função localtime
+
+    // Adiciona detalhes na descrição
+    sprintf(
+        descriptionFormated,
+        "R$-%.2f - %s - DÉBITO - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        (cashOnInteger / 100.0),
+        description,
+        dateAndTime->tm_mday,
+        dateAndTime->tm_mon,
+        dateAndTime->tm_year+1900,
+        dateAndTime->tm_hour,
+        dateAndTime->tm_min,
+        dateAndTime->tm_sec
+    );
+
+    // Adicona a descrição da transação
+    strcpy(
+        list->accountsData[accountIndex].statmentData.statment[
+            list->accountsData[accountIndex].statmentData.quantity
+        ],
+        descriptionFormated
+    );
+    list->accountsData[accountIndex].statmentData.quantity++; // Incrementa
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso ao sacar o dinheiro
+}
+
+// Transrência passando número da agência e conta de origem, agência e conta de destino e valor da transferência
+int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned int sourceAccountNumber, unsigned int destinationAgencyNumber, unsigned int destinationAccountNumber, float cash){
+    unsigned int cashOnInteger;
+    int sourceAccountIndex = getAccountIndex(list, sourceAgencyNumber, sourceAccountNumber);
+    int destinationAccountIndex = getAccountIndex(list, destinationAgencyNumber, destinationAccountNumber);
+    char descriptionFormated[MAX_STATMENT_CHAR];
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(sourceAccountIndex < 0 || destinationAccountIndex < 0 || cash < 0){
+        return 0; // Retorna 0 (falso), indicando que não foi possível realizar a transferência
+    }
+
+    // Transforma o valor em inteiro, arredondando com 2 casas decimais
+    cashOnInteger = round(cash * 100);
+    
+    // Verifica se tem saldo suficiente na conta de origem
+    if(list->accountsData[sourceAccountIndex].balance < cashOnInteger){
+        return -1; // Retorna erro -1, indicando que o saldo é insuficiente
+    }
+
+    // Faz o saque da conta de origem
+    list->accountsData[sourceAccountIndex].balance -= cashOnInteger;
+
+    // Adiciona o valor à conta de destino
+    list->accountsData[destinationAccountIndex].balance += cashOnInteger;
+
+    // Obtem a hora atual
+    struct tm *dateAndTime;
+    time_t seconds; // variável do tipo time_t para armazenar o tempo em segundos
+    time(&seconds);// obtendo o tempo em segundos
+    dateAndTime = localtime(&seconds);// para converter de segundos para o tempo local utilizamos a função localtime
+
+    // Adiciona detalhes na descrição de origiem e copia para extrato
+    sprintf(
+        descriptionFormated,
+        "R$-%.2f - Tranferência para conta: %u-%u - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        (cashOnInteger / 100.0),
+        destinationAccountNumber,
+        destinationAccountNumber,
+        dateAndTime->tm_mday,
+        dateAndTime->tm_mon,
+        dateAndTime->tm_year+1900,
+        dateAndTime->tm_hour,
+        dateAndTime->tm_min,
+        dateAndTime->tm_sec
+    );
+    bankStatmentFreeFirstPosition(list, sourceAccountNumber, sourceAccountNumber);
+    strcpy(
+        list->accountsData[sourceAccountIndex].statmentData.statment[
+            list->accountsData[sourceAccountIndex].statmentData.quantity
+        ],
+        descriptionFormated
+    );
+    list->accountsData[sourceAccountIndex].statmentData.quantity++; // Incrementa
+
+    // Adiciona detalhes na descrição de destino e copia para extrato
+    sprintf(
+        descriptionFormated,
+        "R$%.2f - Tranferência de conta: %u-%u - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        (cashOnInteger / 100.0),
+        sourceAgencyNumber,
+        sourceAccountNumber,
+        dateAndTime->tm_mday,
+        dateAndTime->tm_mon,
+        dateAndTime->tm_year+1900,
+        dateAndTime->tm_hour,
+        dateAndTime->tm_min,
+        dateAndTime->tm_sec
+    );
+    strcpy(
+        list->accountsData[destinationAccountIndex].statmentData.statment[
+            list->accountsData[destinationAccountIndex].statmentData.quantity
+        ],
+        descriptionFormated
+    );
+    list->accountsData[destinationAccountIndex].statmentData.quantity++; // Incrementa
+
+    return 1; // Retorna 1 (verdadeiro), indicando a transferência foi realizada com sucesso.
+}
+
+// Mostra o extrato passando número da agência, conta, dias para mostrar
+int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int days){
+    int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+    int i = 0;
+
+    // Verifica se o valor é válido. Valores negativos indicam erro
+    if(accountIndex < 0 || days <= 0){
+        return 0; // Retorna 0 (falso), indicando que não foi possível mostrar o extrato
+    }
+
+    // Verifica se o extrato está vazio
+    if(list->accountsData[accountIndex].statmentData.quantity == 0){
+        return -1; // Retorna erro -1, indicando que o extrato está vazio
+    }
+
+    for(i = 0; i < list->accountsData[accountIndex].statmentData.quantity; i++){
+        printf("%s\n", list->accountsData[accountIndex].statmentData.statment[i]);
+    }
+
+    return 1; // Retorna 1 (verdadeiro), indicando sucesso
+}

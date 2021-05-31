@@ -19,8 +19,12 @@ char nomeTemporario[MAX_ADRESS];
 _ACCOUNT_LIST *contasBancaria;
 _ACCOUNT contaTemporaria;
 unsigned int numeroAgencia;
+unsigned int numeroAgenciaDestino;
 unsigned int numeroConta;
+unsigned int numeroContaDestino;
 int accountIndex;
+float valorMonetario;
+char descricao[MAX_STATMENT_CHAR - 45];
 unsigned long codigoParaConsultar;
 unsigned int vezesExecutado = 0;
 short int codigoErro;
@@ -466,7 +470,7 @@ int main(){
                             // Excluí o cliente e armazena possíveis erros em "codigoErro"
                             codigoErro = removePerson(clientes, codigoParaConsultar);
                             // Remove todas as contas associadas a um CPF/CNPJ
-                            removeAccountAll(contasBancaria, pessoaTemporaria.cpf_cnpj);
+                            removeAllAccountsOf(contasBancaria, pessoaTemporaria.cpf_cnpj);
 
                             // Verifica se ocorreu erro
                             if(codigoErro){
@@ -566,7 +570,13 @@ int main(){
                     // Verifica se ocorreu erro ao procutar o cliente na lista
                     if(codigoErro){
                         // Lê os dados da conta
-                        printf("Preencha o formulária. \n");
+                        printf(
+                            "Cliente: %s\n"
+                            "CPF/CNPJ: %lu\n\n"
+                            "Preencha o formulária. \n",
+                            pessoaTemporaria.name,
+                            pessoaTemporaria.cpf_cnpj
+                        );
                         while(1){
                             printf("Número da agência: ");
                             scanf("%u", &contaTemporaria.agencyNumber);
@@ -585,7 +595,7 @@ int main(){
                             clearStdinBuffer();
 
                             // Verifica a conta é um número válido
-                            if(contaTemporaria.accountNumber < 999){
+                            if(contaTemporaria.accountNumber < 999 || contaTemporaria.accountNumber > 4294967295){
                                 printf("Conta inválida.\n");
                             }else{
                                 break; // Encerra o loop
@@ -626,8 +636,9 @@ int main(){
                 case 'R':
                 case 'r':
                     printf(
-                        "R – Listagem de contas cadastradas. \n\n"
                         "\033[H\033[2J\033[3J" // Limpa a tela
+                        "R – Listagem de contas cadastradas. \n\n"
+                        "Em implementação... \n"
                     );
 
                     // Verifica se existem contas bancárias cadastados
@@ -646,13 +657,15 @@ int main(){
                             "-----------------------------------\n"
                             "Agência: %u\n"
                             "Conta: %u\n"
-                            "Id: %hu\n"
+                            "Saldo: R$%.2f\n"
                             "Nome: %s\n"
+                            "Id: %hu\n"
                             "CPF/CNPJ: %lu\n",
                             contasBancaria->accountsData[accountIndex].agencyNumber,
                             contasBancaria->accountsData[accountIndex].accountNumber,
-                            contasBancaria->accountsData[accountIndex].personId,
+                            (contasBancaria->accountsData[accountIndex].balance / 100.0),
                             clientes->peopleData[getPersonIndex(clientes, contasBancaria->accountsData[accountIndex].personId)].name,
+                            contasBancaria->accountsData[accountIndex].personId,
                             contasBancaria->accountsData[accountIndex].cpf_cnpj
                         );
                     }
@@ -669,21 +682,55 @@ int main(){
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "L – Listar contas de um cliente. \n\n"
                         "Em implementação... \n"
+                        "Digite o código ou CPF/CNPJ: "
                     );
+                    scanf(" %lu", &codigoParaConsultar);
+
+                    // Obtém o cliente e armazena em pessoaTemporaria. Armazena possíveis erros em "codigoErro"
+                    codigoErro = getPerson(clientes, codigoParaConsultar, &pessoaTemporaria); // (lista, código do cliente, ponteiro para armazenar o cliente)
+
+                    if(codigoErro == 1){
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Cliente: %s\n"
+                            "CPF/CNPJ: %lu\n",
+                            pessoaTemporaria.name,
+                            pessoaTemporaria.cpf_cnpj
+                        );
+
+                        // Obtem quantas contas bancárias estão associadas a um CPF/CNPJ
+                        int accountsQuantity = getAmountOfAccounts(contasBancaria, pessoaTemporaria.cpf_cnpj);
+
+                        // Verifica quantas contas foram encontradas
+                        if(accountsQuantity > 0){
+                            
+                            // Mostra a lista de contas do cliente
+                            getAllAccountsOf(contasBancaria, pessoaTemporaria.cpf_cnpj);
+                        }else{
+                            printf(
+                                "\033[H\033[2J\033[3J" // Limpa a tela
+                                "Nenhuma conta encontrada. \n"
+                            );
+                        }
+                        // Aguarda receber um caractere para continuar execução
+                        printf("\nPressione 'q' para continuar...\n");
+                        while((getchar() == '\n'));
+                    }else{
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Cliente não encontrado. \n"
+                        );
+                    }
+
+                    // Limpa a tela
+                    printf("\033[H\033[2J\033[3J");
                     break;
                 case 'W':
                 case 'w':
                     printf(
-                        "W – Realizar um saque em uma conta. \n"
                         "\033[H\033[2J\033[3J" // Limpa a tela
+                        "W – Realizar um saque em uma conta. \n\n"
                         "Em implementação... \n"
-                    );
-                    break;
-                case 'D':
-                case 'd':
-                    printf(
-                        "\033[H\033[2J\033[3J" // Limpa a tela
-                        "D – Realizar um depósito em uma conta. \n\n"
                         "Agência: "
                     );
                     scanf( "%u", &numeroAgencia);
@@ -696,8 +743,78 @@ int main(){
                     codigoErro = getAccount(contasBancaria, numeroAgencia, numeroConta, &contaTemporaria);
 
                     // Verifica ocorreu erro
-                    if(codigoErro >= 0){
-                        unsigned int valorMonetario;
+                    if(codigoErro){
+                        float valorMonetario;
+                        // Tenta obter dados do cliente enviando Id do cliente
+                        getPerson(
+                            clientes,
+                            contaTemporaria.personId,
+                            &pessoaTemporaria
+                        );
+                        // Dados do cliente
+                        printf(
+                            "\n"
+                            "Cliente: %s\n"
+                            "Agência: %u\n"
+                            "Conta: %u\n"
+                            "Saldo: R$%.2f\n\n"
+                            "Valor do saque: ",
+                            pessoaTemporaria.name,
+                            contaTemporaria.agencyNumber,
+                            contaTemporaria.accountNumber,
+                            (contaTemporaria.balance / 100.0)
+                        );
+                        scanf(" %f", &valorMonetario);
+                        clearStdinBuffer();
+                        printf("Descrição: ");
+                        scanf(" %[^\n]", descricao);
+                        clearStdinBuffer();
+
+                        // Tenta fazer o saque
+                        codigoErro = bankDraft(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, descricao, valorMonetario);
+
+                        if(codigoErro == 1){
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Saque realizado com sucesso. \n"
+                            );
+                        }else if(codigoErro == -1){
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Saldo insuficiente. \n"
+                            );
+                        }else{
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Não foi possível realizar o saque. \n"
+                            );
+                        }
+                    }else{
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Conta não encontrada. \n"
+                        );
+                    }
+                    break;
+                case 'D':
+                case 'd':
+                    printf(
+                        "\033[H\033[2J\033[3J" // Limpa a tela
+                        "D – Realizar um depósito em uma conta. \n\n"
+                        "Em implementação... \n"
+                        "Agência: "
+                    );
+                    scanf( "%u", &numeroAgencia);
+                    clearStdinBuffer();
+                    printf("Conta: ");
+                    scanf( "%u", &numeroConta);
+                    clearStdinBuffer();
+
+                    // Tenta encontrar a conta bancária
+                    codigoErro = getAccount(contasBancaria, numeroAgencia, numeroConta, &contaTemporaria);
+
+                    // Verifica ocorreu erro
+                    if(codigoErro){
                         // Tenta obter dados do cliente enviando Id do cliente
                         getPerson(
                             clientes,
@@ -710,34 +827,200 @@ int main(){
                             "Cliente: %s\n"
                             "Agência: %u\n"
                             "Conta: %u\n\n"
-                            "Valor do deposito: ",
+                            "Valor do depósito: ",
                             pessoaTemporaria.name,
                             contaTemporaria.agencyNumber,
                             contaTemporaria.accountNumber
                         );
-                        scanf(" %u", &valorMonetario);
+                        scanf(" %f", &valorMonetario);
+                        clearStdinBuffer();
+                        printf("Descrição: ");
+                        scanf(" %[^\n]", descricao);
+                        clearStdinBuffer();
+
+                        // Tenta fazer o depósito
+                        codigoErro = bankDeposit(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, descricao, valorMonetario);
+                        if(codigoErro){
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Depósito realizado com sucesso. \n"
+                            );
+                        }else{
+                            printf(
+                                "\033[H\033[2J\033[3J"
+                                "Não foi possível realizar o deposito. \n"
+                            );
+                        }
                     }else{
                         printf(
                             "\033[H\033[2J\033[3J"
-                            "Não encontrado. \n"
+                            "Conta não encontrada. \n"
                         );
                     }
                     break;
                 case 'T':
                 case 't':
                     printf(
-                        "T – Realizar transferência entre contas. \n"
                         "\033[H\033[2J\033[3J" // Limpa a tela
+                        "T – Realizar transferência entre contas. \n\n"
                         "Em implementação... \n"
+                        "Agência de origem: "
                     );
+                    scanf( "%u", &numeroAgencia);
+                    clearStdinBuffer();
+                    printf("Conta de origem: ");
+                    scanf( "%u", &numeroConta);
+                    clearStdinBuffer();
+
+                    // Tenta encontrar a conta bancária
+                    codigoErro = getAccount(contasBancaria, numeroAgencia, numeroConta, &contaTemporaria);
+
+                    // Verifica ocorreu erro
+                    if(codigoErro){
+                        // Tenta obter dados do cliente de destino enviando Id do cliente
+                        getPerson(
+                            clientes,
+                            contaTemporaria.personId,
+                            &pessoaTemporaria
+                        );
+                        // Dados do cliente de origem
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Cliente: %s\n"
+                            "Agência: %u\n"
+                            "Conta: %u\n"
+                            "Saldo: R$%.2f\n\n",
+                            pessoaTemporaria.name,
+                            contaTemporaria.agencyNumber,
+                            contaTemporaria.accountNumber,
+                            (contaTemporaria.balance / 100.0)
+                        );
+
+                        // Lê os dados do cliente destino
+                        printf("Agência de destino: ");
+                        scanf( "%u", &numeroAgenciaDestino);
+                        clearStdinBuffer();
+                        printf("Conta de destino: ");
+                        scanf( "%u", &numeroContaDestino);
+                        clearStdinBuffer();
+
+                        // Tenta encontrar a conta bancária
+                        codigoErro = getAccount(contasBancaria, numeroAgenciaDestino, numeroContaDestino, &contaTemporaria);
+
+                        // Verifica ocorreu erro
+                        if(codigoErro){
+                            // Tenta obter dados do cliente de destino enviando Id do cliente
+                            getPerson(
+                                clientes,
+                                contaTemporaria.personId,
+                                &pessoaTemporaria
+                            );
+                            // Dados do cliente de destino
+                            printf(
+                                "Cliente: %s\n"
+                                "Agência: %u\n"
+                                "Conta: %u\n\n",
+                                pessoaTemporaria.name,
+                                contaTemporaria.agencyNumber,
+                                contaTemporaria.accountNumber
+                            );
+
+                            // Lendo o valor da transferência
+                            printf("Valor da transferência: ");
+                            scanf( "%f", &valorMonetario);
+
+                            // Tenta realizar a transferência bancária
+                            codigoErro = bankTransfer(
+                                contasBancaria,
+                                numeroAgencia,
+                                numeroConta,
+                                numeroAgenciaDestino,
+                                numeroContaDestino,
+                                valorMonetario
+                            );
+
+                            // Verifica se ocorreu erro
+                            if(codigoErro == 1){
+                                printf(
+                                    "\033[H\033[2J\033[3J" // Limpa a tela
+                                    "Transferência realizada com sucesso. \n"
+                                );
+                            }else if(codigoErro == -1){
+                                printf(
+                                    "\033[H\033[2J\033[3J" // Limpa a tela
+                                    "Saldo insuficiente. \n"
+                                );
+                            }else{
+                                printf(
+                                    "\033[H\033[2J\033[3J" // Limpa a tela
+                                    "Erro ao realizar transferência. \n"
+                                );
+                            }
+                        }else{
+                            printf(
+                                "\033[H\033[2J\033[3J" // Limpa a tela
+                                "Conta não encontrada. \n"
+                            );
+                        }
+                    }else{
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Conta não encontrada. \n"
+                        );
+                    }
                     break;
                 case 'E':
                 case 'e':
                     printf(
-                        "E – Exibir extrato de uma conta. \n"
                         "\033[H\033[2J\033[3J" // Limpa a tela
+                        "E – Exibir extrato de uma conta. \n\n"
                         "Em implementação... \n"
+                        "Agência: "
                     );
+                    scanf( "%u", &numeroAgencia);
+                    clearStdinBuffer();
+                    printf("Conta: ");
+                    scanf( "%u", &numeroConta);
+                    clearStdinBuffer();
+
+                    // Tenta encontrar a conta bancária
+                    codigoErro = getAccount(contasBancaria, numeroAgencia, numeroConta, &contaTemporaria);
+
+                    // Verifica ocorreu erro
+                    if(codigoErro){
+                        // Tenta obter dados do cliente enviando Id do cliente
+                        getPerson(
+                            clientes,
+                            contaTemporaria.personId,
+                            &pessoaTemporaria
+                        );
+                        // Dados do cliente
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Cliente: %s\n"
+                            "Agência: %u\n"
+                            "Conta: %u\n"
+                            "Saldo: R$%.2f\n"
+                            "--------------------------------\n",
+                            pessoaTemporaria.name,
+                            contaTemporaria.agencyNumber,
+                            contaTemporaria.accountNumber,
+                            (contaTemporaria.balance / 100.0)
+                        );
+
+                        // Mostra o extrato
+                        bankStatment(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, 23);
+                        
+                        // Aguarda receber um caractere para continuar execução
+                        printf("\nPressione 'q' para continuar...\n");
+                        while((getchar() == '\n'));
+                        printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                    }else{
+                        printf(
+                            "\033[H\033[2J\033[3J"
+                            "Conta não encontrada. \n"
+                        );
+                    }
                     break;
                 case 'V':
                 case 'v':

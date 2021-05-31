@@ -52,7 +52,7 @@ typedef struct conta{
     unsigned int agencyNumber; // Número da agência bancária
     unsigned int accountNumber; // Número da conta
     unsigned int balance; // Saldo da conta
-    _STATMENT statment; // Extrato da conta bancária
+    _STATMENT statmentData; // Extrato da conta bancária
 }_ACCOUNT;
 
 // Define a estrutura que armazenará as contas bancárias
@@ -60,12 +60,6 @@ typedef struct listaContas{
     int quantity;
     _ACCOUNT accountsData[MAX_ACCOUNT]; // Criar vetor accountData do tipo _ACCOUNT
 }_ACCOUNT_LIST;
-
-// Define a estrutura que armazenará extrato bancário
-typedef struct listaExtrato{
-    int quantity;
-    _STATMENT statmentData[MAX_STATMENT]; // Criar vetor statmentData do tipo _STATMENT
-}_STATMENT_LIST;
 
 // Define a estrutura que vai armazenar ao clientes
 typedef struct listaClientes{
@@ -135,7 +129,7 @@ int addAccount(_ACCOUNT_LIST* list, _ACCOUNT account);
 int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber);
 
 // Remove todas as contas associadas a um CPF/CNPJ
-void removeAccountAll(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+void removeAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
 
 // Obtém o Index na lista passando número da agência e conta
 int getAccountIndex(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber);
@@ -146,7 +140,25 @@ int getAccountIndexByCode(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
 // Consultar na lista passando número da agência e conta
 int getAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, _ACCOUNT *account);
 
+// Otem a quantidade de contas bancárias associadas a um CPF/CNPJ
+int getAmountOfAccounts(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+
+// Obtém todos as contas associadas a um CPF/CNPJ e armazena numa string
+int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+
 /* ************ STATMENT LIST FUNCTIONS ************ */
 
-// Termina a biblioteca
+// Depósito bancária passando número da agência, conta, descrição, valor monetário
+int bankDeposit(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int accountNumber, char *description, float cash);
+
+// Saque passando número da agência, conta, descrição, valor monetário
+int bankDraft(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int accountNumber, char *description, float cash);
+
+// Transrência passando número da agência e conta de origem, agência e conta de destino e valor da transferência
+int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned int sourceAccountNumber, unsigned int destinationAgencyNumber, unsigned int destinationAccountNumber, float cash);
+
+// Mostra o extrato passando número da agência, conta, dias para mostrar
+int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int days);
+
+/* Termina a biblioteca */
 #endif
