@@ -1,7 +1,7 @@
-# Compila o o programa inteiro
+# Compila o programa inteiro
 
 # Variávies
-CC = clang
+CC = gcc
 CFLAGS = -std=c99 -pedantic-errors -Wall
 
 # Regra : dependências
