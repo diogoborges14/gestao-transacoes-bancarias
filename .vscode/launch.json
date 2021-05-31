@@ -10,10 +10,11 @@
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [],
+            "targetArchitecture": "x64",
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false,
+            "externalConsole": true,
             "MIMode": "lldb",
             "preLaunchTask": "gcc build for debugging"
         }
