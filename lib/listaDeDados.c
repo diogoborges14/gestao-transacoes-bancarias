@@ -579,7 +579,7 @@ int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
                 "-----------------------------------\n"
                 "Agência: %u\n"
                 "Conta: %u\n"
-                "Saldo: R$%u\n",
+                "Saldo: R$%.2f\n",
                 list->accountsData[accountIndex].agencyNumber,
                 list->accountsData[accountIndex].accountNumber,
                 (list->accountsData[accountIndex].balance / 100.0)
@@ -740,7 +740,6 @@ int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned 
         dateAndTime->tm_min,
         dateAndTime->tm_sec
     );
-    bankStatmentFreeFirstPosition(list, sourceAccountNumber, sourceAccountNumber);
     strcpy(
         list->accountsData[sourceAccountIndex].statmentData.statment[
             list->accountsData[sourceAccountIndex].statmentData.quantity
