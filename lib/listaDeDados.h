@@ -158,7 +158,10 @@ int bankDraft(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int acco
 int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned int sourceAccountNumber, unsigned int destinationAgencyNumber, unsigned int destinationAccountNumber, float cash);
 
 // Mostra o extrato passando número da agência, conta, dias para mostrar
-int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int days);
+int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int daysToShow);
+
+// Libera espaço na primeira posição da lista de extrato
+void bankStatmentFreeFirstPosition(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber);
 
 /* Termina a biblioteca */
 #endif

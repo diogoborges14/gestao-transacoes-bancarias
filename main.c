@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <locale.h> // Localização, caracteres
 #include <string.h> // Necessário para manipular strings (strcpy)
+#include <math.h> // Necessário para valores monetários (round)
 #include "./lib/listaDeDados.h" // Biblioteca que gerencia os dados
 #define EXIT_SUCCESS 0
 #define EXIT_ERROR -1
@@ -11,12 +12,15 @@
 void clearStdinBuffer(){
     while(getchar() != '\n');
 }
+void clearScreen(){
+    printf("\033[H\033[2J\033[3J"); // Limpa a tela
+}
 
 // Var declaration section
-_PERSON_LIST *clientes;
+_PERSON_LIST *clientes; // Listas onde todos os clientes estão guardados
 _PERSON pessoaTemporaria;
 char nomeTemporario[MAX_ADRESS];
-_ACCOUNT_LIST *contasBancaria;
+_ACCOUNT_LIST *contasBancaria; // Lista onde todas as contas estão guardadas
 _ACCOUNT contaTemporaria;
 unsigned int numeroAgencia;
 unsigned int numeroAgenciaDestino;
@@ -217,7 +221,7 @@ int main(){
                     printf("\nPressione 'q' para continuar...\n");
                     while((getchar() == '\n'));
 
-                    printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                    clearScreen(); // Limpa a tela
                     break;
                 case 'B':
                 case 'b':
@@ -288,7 +292,7 @@ int main(){
                         // Aguarda receber um caractere para continuar execução
                         printf("\nPressione 'q' para continuar...\n");
                         while((getchar() == '\n'));
-                        printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                        clearScreen(); // Limpa a tela
                     }
                     else if(codigoErro == -1){
                         // Mostrando nome com maior quantidade de caracteres em comúm
@@ -320,7 +324,7 @@ int main(){
                         // Aguarda receber um caractere para continuar execução
                         printf("\nPressione 'q' para continuar...\n");
                         while((getchar() == '\n'));
-                        printf("\033[H\033[2J\033[3J"); // Limpa a tela    
+                        clearScreen(); // Limpa a tela    
                     }
                     else{
                         printf(
@@ -487,8 +491,8 @@ int main(){
                             }
                         }else{
                             printf(
-                            "\033[H\033[2J\033[3J" // Limpa a tela
-                            "Cliente não foi excuído. \n"
+                                "\033[H\033[2J\033[3J" // Limpa a tela
+                                "Cliente não foi excuído. \n"
                             );
                         }
                     }else{
@@ -501,7 +505,7 @@ int main(){
                 case 'V':
                 case 'v':
                     // V - Voltar ao menu anterior
-                    printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                    clearScreen(); // Limpa a tela
                     main(); // Volta ao menú anterior
                     return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
                     break;
@@ -638,7 +642,6 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "R – Listagem de contas cadastradas. \n\n"
-                        "Em implementação... \n"
                     );
 
                     // Verifica se existem contas bancárias cadastados
@@ -674,14 +677,13 @@ int main(){
                     printf("\nPressione 'q' para continuar...\n");
                     while((getchar() == '\n'));
 
-                    printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                    clearScreen(); // Limpa a tela
                     break;
                 case 'L':
                 case 'l':
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "L – Listar contas de um cliente. \n\n"
-                        "Em implementação... \n"
                         "Digite o código ou CPF/CNPJ: "
                     );
                     scanf(" %lu", &codigoParaConsultar);
@@ -722,15 +724,13 @@ int main(){
                         );
                     }
 
-                    // Limpa a tela
-                    printf("\033[H\033[2J\033[3J");
+                    clearScreen(); // Limpa a tela
                     break;
                 case 'W':
                 case 'w':
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "W – Realizar um saque em uma conta. \n\n"
-                        "Em implementação... \n"
                         "Agência: "
                     );
                     scanf( "%u", &numeroAgencia);
@@ -744,7 +744,6 @@ int main(){
 
                     // Verifica ocorreu erro
                     if(codigoErro){
-                        float valorMonetario;
                         // Tenta obter dados do cliente enviando Id do cliente
                         getPerson(
                             clientes,
@@ -766,12 +765,58 @@ int main(){
                         );
                         scanf(" %f", &valorMonetario);
                         clearStdinBuffer();
+
+                        // Transforma o valor decimal em inteiro
+                        int valorMonetarioInt = round(valorMonetario * 100);
+
+                        // Distribuí o valor entre as notas disponíveis 2, 5, 10, 20, 50, 100 e 200 reais.
+                        unsigned int notas200 = valorMonetarioInt / 20000;
+                        valorMonetarioInt -= notas200 * 20000;
+                        unsigned int notas100 = valorMonetarioInt / 10000;
+                        valorMonetarioInt -= notas100 * 10000;
+                        unsigned int notas50 = valorMonetarioInt / 5000;
+                        valorMonetarioInt -= notas50 * 5000;
+                        unsigned int notas20 = valorMonetarioInt / 2000;
+                        valorMonetarioInt -= notas20 * 2000;
+                        unsigned int notas10 = valorMonetarioInt / 1000;
+                        valorMonetarioInt -= notas10 * 1000;
+                        unsigned int notas5 = valorMonetarioInt / 500;
+                        valorMonetarioInt -= notas5 * 500;
+                        unsigned int notas2 = valorMonetarioInt / 200;
+                        valorMonetarioInt -= notas2 * 200;
+                        unsigned int resto = valorMonetarioInt;
+
+                        // Calcula qual valor poderá ser sacado
+                        valorMonetarioInt = (notas200 * 200) + (notas100 * 100) + (notas50 * 50) + (notas20 * 20) + (notas10 * 10) + (notas5 * 5) + (notas2 * 2);
+                        
+                        printf(
+                            "Você pode sacar: R$%u\n"
+                            "Dividido em: \n",
+                            valorMonetarioInt
+                        );
+                        (notas200 > 0) ? printf("%u notas de R$200 \n", notas200) : printf("");
+                        (notas100 > 0) ? printf("%u notas de R$100 \n", notas100): printf("") ;
+                        (notas50 > 0) ? printf("%u notas de R$50 \n", notas50): printf("");
+                        (notas20 > 0) ? printf("%u notas de R$20 \n", notas20): printf("");
+                        (notas10 > 0) ? printf("%u notas de R$10 \n", notas10): printf("");
+                        (notas5 > 0) ? printf("%u notas de R$5 \n", notas5): printf("");
+                        (notas2 > 0) ? printf("%u notas de R$2 \n", notas2): printf("");
+                        (resto > 0) ? printf("R$%.2f não poderá ser sacado. \n", resto / 100.0) : printf("");
+
+                        // Pede confirmação
+                        printf("Deseja continuar? (s/n) ");
+                        scanf("%c", &opcaoEscolhida);
+                        if(opcaoEscolhida != 's' && opcaoEscolhida != 'S'){
+                            clearScreen(); // Limpa a tela
+                            break; // Termina o case 'w'
+                        }
+
                         printf("Descrição: ");
                         scanf(" %[^\n]", descricao);
                         clearStdinBuffer();
 
                         // Tenta fazer o saque
-                        codigoErro = bankDraft(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, descricao, valorMonetario);
+                        codigoErro = bankDraft(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, descricao, valorMonetarioInt);
 
                         if(codigoErro == 1){
                             printf(
@@ -801,7 +846,6 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "D – Realizar um depósito em uma conta. \n\n"
-                        "Em implementação... \n"
                         "Agência: "
                     );
                     scanf( "%u", &numeroAgencia);
@@ -863,7 +907,6 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "T – Realizar transferência entre contas. \n\n"
-                        "Em implementação... \n"
                         "Agência de origem: "
                     );
                     scanf( "%u", &numeroAgencia);
@@ -974,7 +1017,6 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "E – Exibir extrato de uma conta. \n\n"
-                        "Em implementação... \n"
                         "Agência: "
                     );
                     scanf( "%u", &numeroAgencia);
@@ -1008,13 +1050,16 @@ int main(){
                             (contaTemporaria.balance / 100.0)
                         );
 
-                        // Mostra o extrato
-                        bankStatment(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, 23);
-                        
+                        printf("Extrato de quantos dias? ");
+                        scanf("%lu", &codigoParaConsultar);
+
+                        // Mostra o extrato bancário
+                        bankStatment(contasBancaria, contaTemporaria.agencyNumber, contaTemporaria.accountNumber, codigoParaConsultar);
+
                         // Aguarda receber um caractere para continuar execução
                         printf("\nPressione 'q' para continuar...\n");
                         while((getchar() == '\n'));
-                        printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                        clearScreen(); // Limpa a tela
                     }else{
                         printf(
                             "\033[H\033[2J\033[3J"
@@ -1025,7 +1070,7 @@ int main(){
                 case 'V':
                 case 'v':
                     // V - Voltar ao menu anterior
-                    printf("\033[H\033[2J\033[3J"); // Limpa a tela
+                    clearScreen(); // Limpa a tela
                     main(); // Volta ao menú anterior
                     return EXIT_SUCCESS; // Previne falhas ao navegar pelos menus
                     break;

@@ -617,22 +617,23 @@ int bankDeposit(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int ac
     // Adiciona detalhes na descrição
     sprintf(
         descriptionFormated,
-        "R$%.2f - %s - CREDITO - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        "R$%.2f - %s - CREDITO — %02d/%02d/%02d às %02d:%02d:%02d\n",
         (cashOnInteger / 100.0),
         description,
         dateAndTime->tm_mday,
-        dateAndTime->tm_mon,
+        dateAndTime->tm_mon+1,
         dateAndTime->tm_year+1900,
         dateAndTime->tm_hour,
         dateAndTime->tm_min,
         dateAndTime->tm_sec
     );
 
-    // Adicona a descrição da transação
+    // Libera espaço na primeira posição do Extrato
+    bankStatmentFreeFirstPosition(list, agencyNumber, accountNumber);
+
+    // Adicona a descrição da transação na posição 0
     strcpy(
-        list->accountsData[accountIndex].statmentData.statment[
-            list->accountsData[accountIndex].statmentData.quantity
-        ],
+        list->accountsData[accountIndex].statmentData.statment[0],
         descriptionFormated
     );
     list->accountsData[accountIndex].statmentData.quantity++; // Incrementa
@@ -671,22 +672,23 @@ int bankDraft(_ACCOUNT_LIST* list,  unsigned int agencyNumber, unsigned int acco
     // Adiciona detalhes na descrição
     sprintf(
         descriptionFormated,
-        "R$-%.2f - %s - DÉBITO - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        "R$-%.2f - %s - DÉBITO — %02d/%02d/%02d às %02d:%02d:%02d\n",
         (cashOnInteger / 100.0),
         description,
         dateAndTime->tm_mday,
-        dateAndTime->tm_mon,
+        dateAndTime->tm_mon+1,
         dateAndTime->tm_year+1900,
         dateAndTime->tm_hour,
         dateAndTime->tm_min,
         dateAndTime->tm_sec
     );
 
-    // Adicona a descrição da transação
+    // Libera espaço na primeira posição do Extrato
+    bankStatmentFreeFirstPosition(list, agencyNumber, accountNumber);
+    
+    // Adicona a descrição da transação na posição 0
     strcpy(
-        list->accountsData[accountIndex].statmentData.statment[
-            list->accountsData[accountIndex].statmentData.quantity
-        ],
+        list->accountsData[accountIndex].statmentData.statment[0],
         descriptionFormated
     );
     list->accountsData[accountIndex].statmentData.quantity++; // Incrementa
@@ -729,21 +731,21 @@ int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned 
     // Adiciona detalhes na descrição de origiem e copia para extrato
     sprintf(
         descriptionFormated,
-        "R$-%.2f - Tranferência para conta: %u-%u - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        "R$-%.2f - Tranferência para conta: %u-%u — %02d/%02d/%02d às %02d:%02d:%02d\n",
         (cashOnInteger / 100.0),
         destinationAccountNumber,
         destinationAccountNumber,
         dateAndTime->tm_mday,
-        dateAndTime->tm_mon,
+        dateAndTime->tm_mon+1,
         dateAndTime->tm_year+1900,
         dateAndTime->tm_hour,
         dateAndTime->tm_min,
         dateAndTime->tm_sec
     );
+    // Libera espaço na primeira posição do Extrato
+    bankStatmentFreeFirstPosition(list, sourceAgencyNumber, sourceAccountNumber);
     strcpy(
-        list->accountsData[sourceAccountIndex].statmentData.statment[
-            list->accountsData[sourceAccountIndex].statmentData.quantity
-        ],
+        list->accountsData[sourceAccountIndex].statmentData.statment[0],
         descriptionFormated
     );
     list->accountsData[sourceAccountIndex].statmentData.quantity++; // Incrementa
@@ -751,21 +753,21 @@ int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned 
     // Adiciona detalhes na descrição de destino e copia para extrato
     sprintf(
         descriptionFormated,
-        "R$%.2f - Tranferência de conta: %u-%u - %02d/%02d/%02d às %02d:%02d:%02d\n",
+        "R$%.2f - Tranferência de conta: %u-%u — %02d/%02d/%02d às %02d:%02d:%02d\n",
         (cashOnInteger / 100.0),
         sourceAgencyNumber,
         sourceAccountNumber,
         dateAndTime->tm_mday,
-        dateAndTime->tm_mon,
+        dateAndTime->tm_mon+1,
         dateAndTime->tm_year+1900,
         dateAndTime->tm_hour,
         dateAndTime->tm_min,
         dateAndTime->tm_sec
     );
+    // Libera espaço na primeira posição do Extrato
+    bankStatmentFreeFirstPosition(list, destinationAgencyNumber, destinationAccountNumber);
     strcpy(
-        list->accountsData[destinationAccountIndex].statmentData.statment[
-            list->accountsData[destinationAccountIndex].statmentData.quantity
-        ],
+        list->accountsData[destinationAccountIndex].statmentData.statment[0],
         descriptionFormated
     );
     list->accountsData[destinationAccountIndex].statmentData.quantity++; // Incrementa
@@ -774,12 +776,15 @@ int bankTransfer(_ACCOUNT_LIST* list, unsigned int sourceAgencyNumber, unsigned 
 }
 
 // Mostra o extrato passando número da agência, conta, dias para mostrar
-int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int days){
+int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber, int daysToShow){
     int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+    int dayReaded;
+    int lastDayReaded=99;
+    int daysCounted=0;
     int i = 0;
 
     // Verifica se o valor é válido. Valores negativos indicam erro
-    if(accountIndex < 0 || days <= 0){
+    if(accountIndex < 0 || daysToShow <= 0){
         return 0; // Retorna 0 (falso), indicando que não foi possível mostrar o extrato
     }
 
@@ -788,9 +793,45 @@ int bankStatment(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int ac
         return -1; // Retorna erro -1, indicando que o extrato está vazio
     }
 
+    // Percorre todo o extrato
     for(i = 0; i < list->accountsData[accountIndex].statmentData.quantity; i++){
+        /* Scanf to search the day number. I'm using a special character
+            —	em dash	        020024	8212	0x2014	&mdash;     */
+        sscanf(
+            list->accountsData[accountIndex].statmentData.statment[i],
+            "%*[^—]—%d/%*d/%*d às %*d:%*d:%*d",
+            &dayReaded
+        );
+
+        // Conta quantos dias diferente estão sendo mostrado 
+        if(daysCounted <= daysToShow && dayReaded != lastDayReaded){
+            daysCounted++;
+        }
+
+        // Mostra o extrato 
         printf("%s\n", list->accountsData[accountIndex].statmentData.statment[i]);
+        
+        // Verifica se já tiver atingido a quantidade de dias suficiente
+        if(daysCounted == daysToShow){
+            break; // Encerra o loop
+        }
+
+        // Guarda o último dia lido
+        lastDayReaded = dayReaded;
     }
 
     return 1; // Retorna 1 (verdadeiro), indicando sucesso
+}
+
+// Libera espaço na primeira posição da lista de extrato
+void bankStatmentFreeFirstPosition(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber){
+    int accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
+
+    // Libera espaço na primeira posição do Extrato
+    for(int i = list->accountsData[accountIndex].statmentData.quantity - 1; i >= 0; i--){
+        strcpy(
+            list->accountsData[accountIndex].statmentData.statment[i+1], // próxima posição na lista[i+1]
+            list->accountsData[accountIndex].statmentData.statment[i]  // recebe o elemento atual [i]
+        );
+    }
 }
