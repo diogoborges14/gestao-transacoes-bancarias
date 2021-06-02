@@ -282,7 +282,7 @@ void personListToAlphabeticalOrder(_PERSON_LIST* list){
 
     // Percorre a lista de pessoas várias vezes
     for(k=0; (k < list->quantity * list->quantity); k++){
-        /* Coloca a primeira letra do nome da pessoa em minúscula
+        /* Coloca a primeira letra do nome da pessoa em maiúscula
            → 1ª letra do nome recebe sua versão maiúscula */
         list->peopleData[i].name[0] = toupper(list->peopleData[i].name[0]);
         list->peopleData[i+1].name[0] = toupper(list->peopleData[i+1].name[0]);
@@ -562,19 +562,55 @@ int getAmountOfAccounts(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
     return accountsQuantity;
 }
 
-// Obtém todos as contas associadas a um CPF/CNPJ e armazena numa string
-int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
+// Obtém todos as contas associadas a um CPF/CNPJ e imprime
+void getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
     int accountIndex;
+    int accountsQuantity = getAmountOfAccounts(list, cpf_cnpj);
+    int i=0;
+    int tmpBalance;
+    int *balancesMask = (int *)malloc(sizeof(int) * accountsQuantity); // Aloca vetor dinâmico para os saldos
 
     // Verifica se a lista existe
     if(list == NULL){
-        return 0; // Retorna 0 (falso), indicando que não foi possível encontrar contas
+        return; // Retorna, indicando que não foi possível encontrar contas
     }
 
     // Percorre toda a lista de contas bancárias
     for(accountIndex = 0; accountIndex < list->quantity; accountIndex++){
-        // Se achar a cota de um cliente, cliente, mostrar
+        // Se achar uma conta do cliente, copiar saldo
         if(list->accountsData[accountIndex].cpf_cnpj == cpf_cnpj){
+            balancesMask[i] = list->accountsData[accountIndex].balance;
+            i++;
+        }
+    }
+
+    i = 0;
+    // Ordena lista de saldo
+    while(balancesMask[i] < balancesMask[i+1]){
+        tmpBalance = balancesMask[i];
+        balancesMask[i] = balancesMask[i+1];
+        balancesMask[i+1] = tmpBalance;
+
+        i++;
+        // Se chegar no final da lista, volta do início
+        if(i >= accountsQuantity - 1){
+            i = 0;
+        }
+    }
+
+    i = 0; // Representa index do saldo
+    accountIndex = 0;
+    /* 
+        Percorre toda a lista de contas bancárias várias vezes,
+        a primeira lista 'balancesMask' está em ordem descrescente de saldo
+        ele servirá como uma 'másca' para decidir quanto um saldo deve ser impresso
+    */
+    while(i < accountsQuantity){
+        // Se achar a conta de um cliente e cujo saldo seja igual ao da másca 'balancesMask', mostrá-lo
+        if(
+            list->accountsData[accountIndex].cpf_cnpj == cpf_cnpj &&
+            list->accountsData[accountIndex].balance == balancesMask[i]
+        ){
             printf(
                 "-----------------------------------\n"
                 "Agência: %u\n"
@@ -584,11 +620,94 @@ int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
                 list->accountsData[accountIndex].accountNumber,
                 (list->accountsData[accountIndex].balance / 100.0)
             );
+            i++; // Incrementa índice de 'balancesMask'
+        }
+        accountIndex++;
+        // Se chegar no final da lista de contas, voltar do início
+        if(accountIndex >= list->quantity){
+            accountIndex = 0;
         }
     }
 
-    return 1; // Retorna 1 (verdadeiro), indicando que foram encontradas
+    free(balancesMask); // Libera o array da memória
 }
+
+// Lista todas as contas salvas em ordem alfabética e descrecente de saldo
+void getAllAccounts(_ACCOUNT_LIST* accountsList, _PERSON_LIST *personList){
+    typedef struct contas{
+        unsigned short personId; // Id do cliente
+        unsigned long cpf_cnpj; // CPF/CNPJ do cliente
+        char name[MAX_NAME]; // Nome do cliente
+    }_ACCOUNTS2;
+    _ACCOUNTS2 accountsToShow[accountsList->quantity];
+    _ACCOUNTS2 tmpAccount;
+    char lastName[MAX_NAME];
+    int i, k;
+
+    // Copia todas as contas para uma array do tipo 'accounts2'
+    for(i=0; i < accountsList->quantity; i++){
+        accountsToShow[i].cpf_cnpj = accountsList->accountsData[i].cpf_cnpj;
+        accountsToShow[i].personId = accountsList->accountsData[i].personId;
+        strcpy( // Copia o nome do cliente
+            accountsToShow[i].name,
+            personList->peopleData[
+                getPersonIndex(personList, accountsList->accountsData[i].cpf_cnpj) // Obtem o índice do cliente enviando a lista de clientes e CPF/CNPJ
+            ].name
+        );
+    }
+
+    // Oraganiza em ordem alfabética
+    k=0;
+    i=0;
+    // Percorre a lista de clientes várias vezes
+    for(k=0; (k < accountsList->quantity * accountsList->quantity); k++){
+        /* Coloca a primeira letra do nome da pessoa em maiúscula
+           → 1ª letra do nome recebe sua versão maiúscula */
+        accountsToShow[i].name[0] = toupper(accountsToShow[i].name[0]);
+        accountsToShow[i+1].name[0] = toupper(accountsToShow[i+1].name[0]);
+
+        /* Compara o valor entre dois nomes
+           → se (valor > 0) → não está em ordem alfabética 
+           → se (valor < 0) → está em ordem crescente/alfabética
+           → se (valor == 0) as duas palavras tem o mesmo valor */
+        if(strcmp(accountsToShow[i].name, accountsToShow[i+1].name) > 0){
+            // Troca posição de conta[i] por conta[i+1] e vice-versa, usando variável auxiliar
+            tmpAccount = accountsToShow[i];
+            accountsToShow[i] = accountsToShow[i+1];
+            accountsToShow[i+1] = tmpAccount;
+        }
+            
+        // Passa para a próximo conta
+        i++;
+
+        // Se chegar na última posição, volta do início
+        if(i >= accountsList->quantity-1){
+            i = 0;
+        }
+    }
+
+    // Mostrando todas as contas bancárias
+    for(i=0; i < accountsList->quantity; i++){
+        // Verifica se cliente já foi mostrado anteriomente
+        if(strcmp(accountsToShow[i].name, lastName) != 0){
+            printf(
+                "\n\033[1;31m$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\033[0m\n"
+                "Nome: %s\n"
+                "Id: %hu\n"
+                "CPF/CNPJ: %lu\n",
+                accountsToShow[i].name,
+                accountsToShow[i].personId,
+                accountsToShow[i].cpf_cnpj
+            );
+            getAllAccountsOf(accountsList, accountsToShow[i].cpf_cnpj);
+        }
+        strcpy( // Guarda o nome do último cliente exibido
+            lastName,
+            accountsToShow[i].name
+        );
+    }
+}
+
 /* ************ STATMENT LIST FUNCTIONS ************ */
 
 // Depósito bancária passando número da agência, conta, descrição, valor monetário

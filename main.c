@@ -48,7 +48,7 @@ int main(){
     vezesExecutado++;
 
     printf(
-        "============== Menú principal ============== \n"
+        "\033[5;32m============== Menú principal ============== \033[0m\n"
         "C – Gerenciar Clientes \n"
         "T – Gerenciar Contas \n"
         "S – Sair \n"
@@ -63,7 +63,7 @@ int main(){
         case 'c':
             printf(
                 "\033[H\033[2J\033[3J" // Limpa a tela – This scape sequence clean the screan
-                "============ Gerenciar Clientes ============ \n"
+                "\033[5;32m============ Gerenciar Clientes ============ \033[0m\n"
                 "C – Cadastrar um cliente \n"
                 "L – Listar todos os clientes cadastrados \n"
                 "B – Buscar cliente cadastrado \n"
@@ -466,9 +466,9 @@ int main(){
                             pessoaTemporaria.address.zipcode
                         );
                         // Aguarda confirmação para continar
-                        printf("\nTem certeza que deseja exluir o cliente? (s/n)\n");
+                        printf("\n\033[1;31mTem certeza que deseja excluir o cliente? (s/n)\033[0m ");
                         scanf(" %c", &opcaoEscolhida);
-                        
+
                         // Verifica a resposta
                         if(opcaoEscolhida == 's'){
                             // Excluí o cliente e armazena possíveis erros em "codigoErro"
@@ -542,7 +542,7 @@ int main(){
         case 't':
             printf(
                 "\033[H\033[2J\033[3J" // Limpa a tela
-                "============= Gerenciar Contas ============= \n"
+                "\033[5;32m============= Gerenciar Contas ============= \033[0m\n"
                 "C – Cadastrar uma conta para um cliente. \n"
                 "R – Listagem de contas cadastradas. \n"
                 "L – Listar contas de um cliente. \n"
@@ -654,24 +654,7 @@ int main(){
                     }
 
                     printf("Foram encontradas: %d conta(s) bancária(s). \n", lengthAccountList(contasBancaria));
-                    // Lista todos as contas bancárias cadastrados
-                    for(accountIndex = 0; accountIndex < contasBancaria->quantity; accountIndex++){
-                        printf(
-                            "-----------------------------------\n"
-                            "Agência: %u\n"
-                            "Conta: %u\n"
-                            "Saldo: R$%.2f\n"
-                            "Nome: %s\n"
-                            "Id: %hu\n"
-                            "CPF/CNPJ: %lu\n",
-                            contasBancaria->accountsData[accountIndex].agencyNumber,
-                            contasBancaria->accountsData[accountIndex].accountNumber,
-                            (contasBancaria->accountsData[accountIndex].balance / 100.0),
-                            clientes->peopleData[getPersonIndex(clientes, contasBancaria->accountsData[accountIndex].personId)].name,
-                            contasBancaria->accountsData[accountIndex].personId,
-                            contasBancaria->accountsData[accountIndex].cpf_cnpj
-                        );
-                    }
+                    getAllAccounts(contasBancaria, clientes);
 
                     // Aguarda receber um caractere para continuar execução
                     printf("\nPressione 'q' para continuar...\n");
@@ -804,7 +787,7 @@ int main(){
                         (resto > 0) ? printf("R$%.2f não poderá ser sacado. \n", resto / 100.0) : printf("");
 
                         // Pede confirmação
-                        printf("Deseja continuar? (s/n) ");
+                        printf("\033[1;31mDeseja continuar? (s/n) \033[0m");
                         scanf("%c", &opcaoEscolhida);
                         if(opcaoEscolhida != 's' && opcaoEscolhida != 'S'){
                             clearScreen(); // Limpa a tela
@@ -1126,6 +1109,47 @@ int main(){
             // Encerra o programa
             return EXIT_SUCCESS;
         default:
+            // Menú secreto
+            if(vezesExecutado == 3 && opcaoEscolhida == '~'){
+                printf(
+                    "\033[5;31m============== Menú secreto ============== \n"
+                    "Opção: "
+                );
+                scanf(" %c", &opcaoEscolhida);
+                switch (opcaoEscolhida){
+                    case '1':
+                        printf(
+                            "removeAllAccountsOf()\n"
+                            "CPF/CNPJ: "
+                        );
+                        scanf("%lu", &pessoaTemporaria.cpf_cnpj);
+                        removeAllAccountsOf(contasBancaria, pessoaTemporaria.cpf_cnpj);
+                    case '2':
+                        printf(
+                            "removeAccount()\n"
+                            "Agência: "
+                        );
+                        scanf( "%u", &numeroAgencia);
+                        printf("Conta: ");
+                        scanf( "%u", &numeroConta);
+                        removeAccount(contasBancaria, numeroAgencia, numeroConta);
+                    case '3':
+                        printf(
+                            "bankDraft()\n"
+                            "Agência: "
+                        );
+                        scanf( "%u", &numeroAgencia);
+                        printf("Conta: ");
+                        scanf( "%u", &numeroConta);
+                        printf("Valor: ");
+                        scanf( "%f", &valorMonetario);
+                        bankDraft(contasBancaria, numeroAgencia, numeroConta, "master", valorMonetario);
+                }
+                printf("\033[0m");
+                clearScreen(); // Limpa a tela
+                break;
+            }
+
             printf(
                 "\033[H\033[2J\033[3J" // Limpa a tela
                 "Comando não encontrado. Tente novamente. \n"

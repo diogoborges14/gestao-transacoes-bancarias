@@ -143,9 +143,11 @@ int getAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int acco
 // Otem a quantidade de contas bancárias associadas a um CPF/CNPJ
 int getAmountOfAccounts(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
 
-// Obtém todos as contas associadas a um CPF/CNPJ e armazena numa string
-int getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
+// Obtém todos as contas associadas a um CPF/CNPJ e imprime
+void getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj);
 
+// Lista todas as contas salvas em ordem alfabética e descrecente de saldo
+void getAllAccounts(_ACCOUNT_LIST* accountsList, _PERSON_LIST *personList);
 /* ************ STATMENT LIST FUNCTIONS ************ */
 
 // Depósito bancária passando número da agência, conta, descrição, valor monetário
