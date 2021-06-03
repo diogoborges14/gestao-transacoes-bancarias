@@ -6,7 +6,7 @@ CFLAGS = -std=c99 -pedantic-errors -Wall
 
 # Regra : dependências
 all: listaDeDados.o main.o
-	$(CC) $(CFLAGS) main.o lib/listaDeDados.o -o main
+	$(CC) $(CFLAGS) main.o lib/listaDeDados.o -lm -o main
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c -o main.o
@@ -20,3 +20,6 @@ clean:
 
 run:
 	./main
+
+debug: listaDeDados.o main.o
+	$(CC) $(CFLAGS) -g main.o lib/listaDeDados.o -lm -o main
