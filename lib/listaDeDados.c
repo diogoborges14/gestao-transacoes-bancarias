@@ -589,16 +589,18 @@ void getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
     }
 
     i = 0;
-    // Ordena lista de saldo
-    while(balancesMask[i] < balancesMask[i+1]){
-        tmpBalance = balancesMask[i];
-        balancesMask[i] = balancesMask[i+1];
-        balancesMask[i+1] = tmpBalance;
+    if(accountsQuantity > 1){ // Só vai ordenar se tiver 2 ou mais elementos
+        // Ordena lista de saldo
+        while(balancesMask[i] < balancesMask[i+1]){
+            tmpBalance = balancesMask[i];
+            balancesMask[i] = balancesMask[i+1];
+            balancesMask[i+1] = tmpBalance;
 
-        i++;
-        // Se chegar no final da lista, volta do início
-        if(i >= accountsQuantity - 1){
-            i = 0;
+            i++;
+            // Se chegar no final da lista, volta do início
+            if(i >= accountsQuantity - 1){
+                i = 0;
+            }
         }
     }
 

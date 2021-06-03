@@ -20,9 +20,16 @@
 		{
 			"type": "cppbuild",
 			"label": "gcc build for debugging",
-			"command": "/usr/bin/make",
+			"command": "/usr/bin/gcc",
 			"args": [
-				"debug"
+				"-g",
+				"-std=c99",
+				"-pedantic-errors",
+				"${file}",
+				"${workspaceFolder}/lib/listaDeDados.c",
+				"-o",
+				"-lm",
+				"${fileDirname}/${fileBasenameNoExtension}"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
