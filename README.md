@@ -10,6 +10,7 @@ A instalação e compilação são simples. Os requisitos são:
 
 * [Git](https://git-scm.com/)
 * [GNU Make](https://www.gnu.org/software/make/)
+* [GCC](https://gcc.gnu.org/)
 
 Basta criar uma cópia do repositório
 ```bash
@@ -23,7 +24,7 @@ $ ./main
 ```
 
 ## Contribuindo
-Sinta-se a vontade para enviar **pull requests**. Para modificações maiores, por favor, abra uma **issue** para discutirmos sobre as mudanças.
+Sinta-se a vontade para enviar **pull requests**. Se deseja fazer modificações maiores, por favor, abra uma **issue** para discutirmos sobre as mudanças.
 
 ## License
 This project is licensed under the terms of the [MIT](https://choosealicense.com/licenses/mit/) license.
