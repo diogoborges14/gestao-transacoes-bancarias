@@ -8,6 +8,10 @@
 #define EXIT_SUCCESS 0
 #define EXIT_ERROR -1
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    #include <stdlib.h>
+#endif
+
 // Limpa o aqruivo stdin
 void clearStdinBuffer(){
     while(getchar() != '\n');
@@ -36,10 +40,18 @@ char opcaoEscolhida;
 int personIndex=0;
 
 int main(){
-   	setlocale(LC_ALL,"Portuguese");
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+        setlocale(LC_ALL, NULL);
+   	#else
+        setlocale(LC_ALL,"Portuguese");
+    #endif
 
     // Verifica quantas vezes a função main() foi executada
     if(vezesExecutado == 0){
+        #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+            system("chcp 65001"); // Ativa UTF-8 encoding
+            printf("\033[H\033[2J\033[3J");
+        #endif
         // Cria/carrega na memória lista de pessoas com nome 'clientes'
         clientes = newPesonList();
         contasBancaria = newAccountList();
@@ -137,20 +149,6 @@ int main(){
                     scanf("%u", &pessoaTemporaria.address.zipcode);
                     clearStdinBuffer();
 
-                    // Entradas para teste.
-                    // Foram suprimidos os scanf para teste
-                    //pessoaTemporaria.id = 336;
-                    //strcpy(pessoaTemporaria.name, "Fulano");
-                    //pessoaTemporaria.cpf_cnpj = 1345312345;
-                    pessoaTemporaria.phoneNumber = 63747364;
-                    strcpy(pessoaTemporaria.address.state, "DF");
-                    strcpy(pessoaTemporaria.address.city, "Brasília");
-                    strcpy(pessoaTemporaria.address.bairro, "Asa Norte");
-                    strcpy(pessoaTemporaria.address.street, "Longe");
-                    pessoaTemporaria.address.number = 333;
-                    pessoaTemporaria.address.zipcode = 445345345;
-                    // Fim teste
-
                     // Cadastra o cliene "pessoaTemporaria" e armazena possíveis erros em "codigoErro"
                     codigoErro = addPerson(clientes, pessoaTemporaria); // (lista, cliente)
 
@@ -228,13 +226,24 @@ int main(){
                     printf(
                         "\033[H\033[2J\033[3J" // Limpa a tela
                         "B – Buscar cliente cadastrado \n\n"
-                        "Procurar usando: \n"
-                        "N → nome. \n"
-                        "C → CPF/CNPJ ou id. \n"
                     );
 
+                    // Verifica se existem contas bancárias cadastados
+                    if(isEmpityPersonList(clientes)){
+                        printf(
+                            "\033[H\033[2J\033[3J" // Limpa a tela
+                            "Nenhum cliente cadastrado.\n"
+                        );
+                        break; // Sai de "case 'b'"
+                    }
+
+                    printf(
+                        "\033[1;31mProcurar por: \n"
+                        "N → nome. \n"
+                        "C → CPF/CNPJ ou Id. \033[0m\n"
+                    );
                     while(1){
-                        printf("(N/C): ");
+                        printf("\033[1;31m(N/C): \033[0m");
                         scanf(" %c", &opcaoEscolhida);
                         clearStdinBuffer();
                         if(
@@ -577,7 +586,7 @@ int main(){
                         printf(
                             "Cliente: %s\n"
                             "CPF/CNPJ: %lu\n\n"
-                            "Preencha o formulária. \n",
+                            "Preencha o formulário. \n",
                             pessoaTemporaria.name,
                             pessoaTemporaria.cpf_cnpj
                         );
@@ -688,26 +697,25 @@ int main(){
 
                         // Verifica quantas contas foram encontradas
                         if(accountsQuantity > 0){
-                            
                             // Mostra a lista de contas do cliente
                             getAllAccountsOf(contasBancaria, pessoaTemporaria.cpf_cnpj);
+                            
+                            // Aguarda receber um caractere para continuar execução
+                            printf("\nPressione 'q' para continuar...\n");
+                            while((getchar() == '\n'));
+                            clearScreen(); // Limpa a tela
                         }else{
                             printf(
                                 "\033[H\033[2J\033[3J" // Limpa a tela
                                 "Nenhuma conta encontrada. \n"
                             );
                         }
-                        // Aguarda receber um caractere para continuar execução
-                        printf("\nPressione 'q' para continuar...\n");
-                        while((getchar() == '\n'));
                     }else{
                         printf(
                             "\033[H\033[2J\033[3J" // Limpa a tela
                             "Cliente não encontrado. \n"
                         );
                     }
-
-                    clearScreen(); // Limpa a tela
                     break;
                 case 'W':
                 case 'w':
@@ -777,14 +785,14 @@ int main(){
                             "Dividido em: \n",
                             valorMonetarioInt
                         );
-                        (notas200 > 0) ? printf("%u notas de R$200 \n", notas200) : printf("");
-                        (notas100 > 0) ? printf("%u notas de R$100 \n", notas100): printf("") ;
-                        (notas50 > 0) ? printf("%u notas de R$50 \n", notas50): printf("");
-                        (notas20 > 0) ? printf("%u notas de R$20 \n", notas20): printf("");
-                        (notas10 > 0) ? printf("%u notas de R$10 \n", notas10): printf("");
-                        (notas5 > 0) ? printf("%u notas de R$5 \n", notas5): printf("");
-                        (notas2 > 0) ? printf("%u notas de R$2 \n", notas2): printf("");
-                        (resto > 0) ? printf("R$%.2f não poderá ser sacado. \n", resto / 100.0) : printf("");
+                        if(notas200 > 0) printf("%u notas de R$200 \n", notas200);
+                        if(notas100 > 0) printf("%u notas de R$100 \n", notas100);
+                        if(notas50 > 0) printf("%u notas de R$50 \n", notas50);
+                        if(notas20 > 0) printf("%u notas de R$20 \n", notas20);
+                        if(notas10 > 0) printf("%u notas de R$10 \n", notas10);
+                        if(notas5 > 0) printf("%u notas de R$5 \n", notas5);
+                        if(notas2 > 0) printf("%u notas de R$2 \n", notas2);
+                        if(resto > 0) printf("R$%.2f não poderá ser sacado. \n", resto / 100.0);
 
                         // Pede confirmação
                         printf("\033[1;31mDeseja continuar? (s/n) \033[0m");

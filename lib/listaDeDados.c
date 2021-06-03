@@ -122,7 +122,9 @@ int addPerson(_PERSON_LIST* list, _PERSON person){
     list->quantity++;
 
     // Oraganiza a lista em ordem alfabética
-    personListToAlphabeticalOrder(list);
+    if(list->quantity > 1){
+        personListToAlphabeticalOrder(list);
+    }
 
     return 1; // Retorna 1 (verdadeiro), indicando sucesso na adição
 }
@@ -153,7 +155,7 @@ int removePerson(_PERSON_LIST* list, unsigned long code){
 
 // Obtém o Index na lista passando código(id ou CPF/CNPJ)
 int getPersonIndex(_PERSON_LIST* list, unsigned long code){
-    int personIndex=-1;
+    int personIndex = 0;
 
     // Faz verificações para saber se será possível encontrar pessoa
     // → Se: lista é nulo ou a lista está vazia ou o código é negativo ou maior que um CNPJ
@@ -205,7 +207,7 @@ int getPerson(_PERSON_LIST* list, unsigned long code, _PERSON *person){
 
 // Consultar na lista passando nome
 int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person){
-    int personIndex=-1;
+    int personIndex=0;
     int commonChar=0; // quantidade de caracteres em comúm
     int commonCharRecord=0; // maior recorde de caracteres em comúm
     int i, k;
@@ -255,7 +257,7 @@ int getPersonByName(_PERSON_LIST* list, char name[MAX_NAME], _PERSON *person){
 
 // Atualiza informações passando código(id ou CPF/CNPJ)
 int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person){
-    int personIndex=-1;
+    int personIndex = 0;
 
     // Obtém o índice onde a pessoa está alocada
     personIndex = getPersonIndex(list, code);
@@ -269,7 +271,9 @@ int updatePerson(_PERSON_LIST* list, unsigned long code, _PERSON person){
     list->peopleData[personIndex] = person;
 
     // Reorganiza a lista em ordem alfabética
-    personListToAlphabeticalOrder(list);
+    if(list->quantity > 1){
+        personListToAlphabeticalOrder(list);
+    }
 
     return 1; // Retorna 1 (verdadeiro), indicando que foi atualizado com sucesso
 }
@@ -419,7 +423,7 @@ int addAccount(_ACCOUNT_LIST* list, _ACCOUNT account){
 
 // Remove da lista de qualquer posição passando número agência e conta
 int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber){
-    int i, accountIndex=-1;
+    int i, accountIndex=0;
 
     // Obtém o índice onde a conta está alocada
     accountIndex = getAccountIndex(list, agencyNumber, accountNumber);
@@ -443,7 +447,7 @@ int removeAccount(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int a
 
 // Remove todas as contas associadas a um CPF/CNPJ. (é acionado quando um cliente é excuído)
 void removeAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
-    int accountIndex = -1;
+    int accountIndex = 0;
 
     // Enquanto encontrar alguma conta
     while(getAccountIndexByCode(list, cpf_cnpj) >= 0){
@@ -462,7 +466,7 @@ void removeAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
 
 // Obtém o Index onde a primeira conta que contém o CPF/CNPJ está alocada
 int getAccountIndexByCode(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
-    int accountIndex = -1;
+    int accountIndex = 0;
 
     // Faz verificações para saber se será possível encontrar conta
     // → Se: lista é nulo ou a lista está vazia ou o CPF/CNPJ < ID ou maior que um CNPJ
@@ -491,7 +495,7 @@ int getAccountIndexByCode(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
 
 // Obtém o Index na lista passando número da agência e conta
 int getAccountIndex(_ACCOUNT_LIST* list, unsigned int agencyNumber, unsigned int accountNumber){
-    int accountIndex = -1;
+    int accountIndex = 0;
 
     // Faz verificações para saber se será possível encontrar conta
     // → Se: lista é nulo ou a lista está vazia ou a agencia ou conta são números negativos
@@ -606,7 +610,7 @@ void getAllAccountsOf(_ACCOUNT_LIST* list, unsigned long cpf_cnpj){
         ele servirá como uma 'másca' para decidir quanto um saldo deve ser impresso
     */
     while(i < accountsQuantity){
-        // Se achar a conta de um cliente e cujo saldo seja igual ao da másca 'balancesMask', mostrá-lo
+        // Se achar a conta de um cliente cujo saldo seja igual ao da máscara 'balancesMask', mostrá-la
         if(
             list->accountsData[accountIndex].cpf_cnpj == cpf_cnpj &&
             list->accountsData[accountIndex].balance == balancesMask[i]
@@ -656,33 +660,35 @@ void getAllAccounts(_ACCOUNT_LIST* accountsList, _PERSON_LIST *personList){
         );
     }
 
-    // Oraganiza em ordem alfabética
-    k=0;
-    i=0;
-    // Percorre a lista de clientes várias vezes
-    for(k=0; (k < accountsList->quantity * accountsList->quantity); k++){
-        /* Coloca a primeira letra do nome da pessoa em maiúscula
-           → 1ª letra do nome recebe sua versão maiúscula */
-        accountsToShow[i].name[0] = toupper(accountsToShow[i].name[0]);
-        accountsToShow[i+1].name[0] = toupper(accountsToShow[i+1].name[0]);
+    if(accountsList->quantity > 1){
+        // Oraganiza em ordem alfabética
+        k=0;
+        i=0;
+        // Percorre a lista de clientes várias vezes
+        for(k=0; (k < accountsList->quantity * accountsList->quantity); k++){
+            /* Coloca a primeira letra do nome da pessoa em maiúscula
+            → 1ª letra do nome recebe sua versão maiúscula */
+            accountsToShow[i].name[0] = toupper(accountsToShow[i].name[0]);
+            accountsToShow[i+1].name[0] = toupper(accountsToShow[i+1].name[0]);
 
-        /* Compara o valor entre dois nomes
-           → se (valor > 0) → não está em ordem alfabética 
-           → se (valor < 0) → está em ordem crescente/alfabética
-           → se (valor == 0) as duas palavras tem o mesmo valor */
-        if(strcmp(accountsToShow[i].name, accountsToShow[i+1].name) > 0){
-            // Troca posição de conta[i] por conta[i+1] e vice-versa, usando variável auxiliar
-            tmpAccount = accountsToShow[i];
-            accountsToShow[i] = accountsToShow[i+1];
-            accountsToShow[i+1] = tmpAccount;
-        }
-            
-        // Passa para a próximo conta
-        i++;
+            /* Compara o valor entre dois nomes
+            → se (valor > 0) → não está em ordem alfabética 
+            → se (valor < 0) → está em ordem crescente/alfabética
+            → se (valor == 0) as duas palavras tem o mesmo valor */
+            if(strcmp(accountsToShow[i].name, accountsToShow[i+1].name) > 0){
+                // Troca posição de conta[i] por conta[i+1] e vice-versa, usando variável auxiliar
+                tmpAccount = accountsToShow[i];
+                accountsToShow[i] = accountsToShow[i+1];
+                accountsToShow[i+1] = tmpAccount;
+            }
+                
+            // Passa para a próximo conta
+            i++;
 
-        // Se chegar na última posição, volta do início
-        if(i >= accountsList->quantity-1){
-            i = 0;
+            // Se chegar na última posição, volta do início
+            if(i >= accountsList->quantity-1){
+                i = 0;
+            }
         }
     }
 
